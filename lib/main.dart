@@ -17,6 +17,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
+      // home: Advisor(advisor_id: "02-1617-00627"),
+      // home: Student(student_id: "02-1234-56789"), //SF
+      // home: AdvisorScholarList(advisor_id: "02-1617-00627"),
+      // home: StudentProfile(),
+      // home: Student(student_id: "02-2425-23321"), //Office
+      // home: AdvisorEvaluation(
+      //   advisor_id: '02-1617-00627',
+      //   student_id: '02-2425-23321',
+      // ),
       home: HomePage(),
     );
   }
@@ -196,8 +205,8 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            child:
-                                const Text('Login', style: TextStyle(fontSize: 18)),
+                            child: const Text('Login',
+                                style: TextStyle(fontSize: 18)),
                             onPressed: () {
                               login();
                             },
@@ -243,7 +252,7 @@ class _HomePageState extends State<HomePage> {
           // Check if the user is a student or an advisor
           if (res.containsKey('supM_id')) {
             // Navigate to the Advisor screen
-            int advisorId = res['supM_id'];
+            String advisorId = res['supM_id'];
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -253,7 +262,7 @@ class _HomePageState extends State<HomePage> {
             );
           } else if (res.containsKey('stud_id')) {
             // Navigate to the Student screen
-            int userId = res['stud_id'];
+            String userId = res['stud_id'];
             Navigator.push(
               context,
               MaterialPageRoute(

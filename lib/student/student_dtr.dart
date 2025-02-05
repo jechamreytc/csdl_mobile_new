@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class StudentDtr extends StatefulWidget {
-  final int student_id;
+  final String student_id;
   const StudentDtr({
     super.key,
     required this.student_id,
@@ -123,7 +123,7 @@ class _StudentDtrState extends State<StudentDtr> {
 
   List<DataRow> _rows() {
     return studentDtr.map((data) {
-      String formattedTime = formatDutyTime(data['dutyH_time'] ?? 'N/A');
+      String formattedTime = formatDutyTime(data['TotalRendered'] ?? 'N/A');
 
       return DataRow(
         cells: [
@@ -138,9 +138,9 @@ class _StudentDtrState extends State<StudentDtr> {
 
   void getStudentDtr() async {
     try {
-      var url = Uri.parse("${SessionStorage.url}CSDL.php");
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "assign_stud_id": widget.student_id,
+        "stud_id": widget.student_id,
       };
 
       Map<String, String> requestBody = {

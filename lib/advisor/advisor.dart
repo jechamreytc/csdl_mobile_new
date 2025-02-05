@@ -3,7 +3,7 @@ import 'package:csdl_mobile/advisor/advisor_scholar_list.dart';
 import 'package:flutter/material.dart';
 
 class Advisor extends StatefulWidget {
-  final int advisor_id;
+  final String advisor_id;
   const Advisor({
     super.key,
     required this.advisor_id,
@@ -14,6 +14,8 @@ class Advisor extends StatefulWidget {
 }
 
 class _AdvisorState extends State<Advisor> {
+  String? selectedOption;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -45,7 +47,8 @@ class _AdvisorState extends State<Advisor> {
             DrawerHeader(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: const Text("Advisor", style: TextStyle(color: Colors.white)),
+                child: const Text("Advisor",
+                    style: TextStyle(color: Colors.white)),
               ),
             ),
             ListTile(
@@ -53,23 +56,61 @@ class _AdvisorState extends State<Advisor> {
                 Icons.qr_code_scanner,
                 color: Colors.white,
               ),
-              title: const Text("QR Scanner", style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AdvisorQrScanner(),
+              title: DropdownButton<String>(
+                value: selectedOption,
+                dropdownColor: const Color.fromARGB(255, 9, 99, 58),
+                items: [
+                  DropdownMenuItem(
+                    value: 'regular',
+                    child: const Text(
+                      'Regular',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                );
-              },
+                  DropdownMenuItem(
+                    value: 'adjustment',
+                    child: const Text(
+                      'Adjustment',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedOption = value;
+                  });
+
+                  if (value == 'regular') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdvisorQrScanner(),
+                      ),
+                    );
+                  } else if (value == 'adjustment') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const AdvisorQrScanner(), // Replace with Adjustment Page if needed
+                      ),
+                    );
+                  }
+                },
+                hint: const Text(
+                  "QR Scanner",
+                  style: TextStyle(color: Colors.white),
+                ),
+                underline: Container(),
+              ),
             ),
             ListTile(
               leading: const Icon(
                 Icons.list,
                 color: Colors.white,
               ),
-              title:
-                  const Text("Scholar List", style: TextStyle(color: Colors.white)),
+              title: const Text("Scholar List",
+                  style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.push(
                   context,

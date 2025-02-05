@@ -1,3 +1,3 @@
 class SessionStorage {
-  static const String url = "http://localhost/phpcsdl/";
+  static const String url = "http://localhost/csdl/";
 }
