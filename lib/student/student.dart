@@ -413,7 +413,7 @@ class _StudentState extends State<Student> {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "stud_id": widget.student_id,
+        "stud_active_id": widget.student_id,
       };
       Map<String, String> requestBody = {
         "operation": "getStudentsDetailsAndStudentDutyAssign",
@@ -428,7 +428,7 @@ class _StudentState extends State<Student> {
         if (res != 0) {
           print(res);
           setState(() {
-            studentIdNumber = res['stud_id'] ?? ""; // SF or Office
+            studentIdNumber = res['stud_active_id'] ?? ""; // SF or Office
             studentFullName = res['StudentFullname'] ?? ""; // SF or Office
             dutySubjectCode = res['sub_code'] ?? ""; // SF
             dutySubjectName = res['sub_descriptive_title'] ?? ""; // SF

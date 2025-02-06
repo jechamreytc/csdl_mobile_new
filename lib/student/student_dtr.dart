@@ -140,7 +140,7 @@ class _StudentDtrState extends State<StudentDtr> {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "stud_id": widget.student_id,
+        "stud_active_id": widget.student_id,
       };
 
       Map<String, String> requestBody = {

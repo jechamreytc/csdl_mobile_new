@@ -241,6 +241,7 @@ class _HomePageState extends State<HomePage> {
         "json": jsonEncode(jsonData),
       };
 
+      print(jsonData);
       // Make the HTTP POST request
       var response = await http.post(url, body: requestBody);
 
