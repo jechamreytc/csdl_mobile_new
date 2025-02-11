@@ -45,82 +45,90 @@ class _StudentDtrState extends State<StudentDtr> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade800,
+      backgroundColor: Colors.green.shade800, // Green background
       body: SingleChildScrollView(
-        // Allow scrolling for smaller screens
-        child: Padding(
-          padding:
-              const EdgeInsets.all(20.0), // Maintain padding around the content
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment
-                .start, // Alignsgit children to the start (left)
-            children: [
-              // Card for School Year
-              _buildCard(
-                'School Year: ${studentDtr.isNotEmpty ? studentDtr[0]['dtr_school_year'] : 'N/A'}',
-              ),
-              // Card for Semester
-              _buildCard(
-                'Semester: ${studentDtr.isNotEmpty ? studentDtr[0]['dtr_semester'] : 'N/A'}',
-              ),
-              // Create Data Table
-              createDatatable(),
-            ],
-          ),
+        padding: const EdgeInsets.all(16.0), // Padding around the screen
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Aligns children to the start (left)
+          children: [
+            // Card for School Year
+            _buildCard(
+              'School Year: ${studentDtr.isNotEmpty ? studentDtr[0]['dtr_school_year'] : 'N/A'}',
+            ),
+            // Card for Semester
+            _buildCard(
+              'Semester: ${studentDtr.isNotEmpty ? studentDtr[0]['dtr_semester'] : 'N/A'}',
+            ),
+            // Create Data Table
+            createDatatable(),
+          ],
         ),
       ),
     );
   }
 
+  // Create a reusable card widget with content
   Widget _buildCard(String content) {
     return Card(
       margin:
           const EdgeInsets.symmetric(vertical: 10.0), // Margin around the card
-      color: Colors.blue,
+      color: Colors.white, // Card background color
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners for the card
+      ),
+      elevation: 5, // Elevation for shadow effect
       child: Padding(
         padding: const EdgeInsets.all(16.0), // Padding inside the card
         child: Text(
           content,
           style: const TextStyle(
-            fontSize: 18, // Maintain font size for consistency
-            color: Colors.white,
+            fontSize: 18, // Font size for the text
+            color: Colors.green, // Text color is green
+            fontWeight: FontWeight.bold, // Bold text
           ),
         ),
       ),
     );
   }
 
+  // Create a DataTable inside a Card
   Widget createDatatable() {
     return Card(
       margin: const EdgeInsets.all(10.0), // Margin around the card
-      color: Colors.blue, // Set the card color to blue
+      color: Colors.white, // Card color
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
+      elevation: 5, // Elevation for shadow effect
       child: SingleChildScrollView(
-        // Enable horizontal scrolling
-        scrollDirection:
-            Axis.horizontal, // Allow horizontal scrolling for the DataTable
+        scrollDirection: Axis.horizontal, // Enable horizontal scrolling
         child: DataTable(
           columns: _columns(),
           rows: _rows(),
           headingTextStyle: const TextStyle(
-            color: Colors.white, // White text for headers
+            color: Colors.green, // Green header text
+            fontWeight: FontWeight.bold, // Bold header text
           ),
           dataTextStyle: const TextStyle(
-            color: Colors.white, // White text for data cells
+            color: Colors.black, // Black text for data cells
           ),
         ),
       ),
     );
   }
 
+  // Define the columns of the DataTable
   List<DataColumn> _columns() {
-    return [
-      const DataColumn(label: Text("Date")),
-      const DataColumn(label: Text("Time In")),
-      const DataColumn(label: Text("Time Out")),
-      const DataColumn(label: Text("Time Rendered (Hours)")),
+    return const [
+      DataColumn(label: Text("Date")),
+      DataColumn(label: Text("Time In")),
+      DataColumn(label: Text("Time Out")),
+      DataColumn(label: Text("Time Rendered (Hours)")),
     ];
   }
 
+  // Define the rows of the DataTable
   List<DataRow> _rows() {
     return studentDtr.map((data) {
       String formattedTime = formatDutyTime(data['TotalRendered'] ?? 'N/A');
@@ -136,6 +144,7 @@ class _StudentDtrState extends State<StudentDtr> {
     }).toList();
   }
 
+  // Fetch student DTR data from API
   void getStudentDtr() async {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
