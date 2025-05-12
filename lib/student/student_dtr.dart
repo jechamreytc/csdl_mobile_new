@@ -44,32 +44,42 @@ class _StudentDtrState extends State<StudentDtr> {
 
   @override
   Widget build(BuildContext context) {
+    // Getting the screen size using MediaQuery
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // Dynamically adjusting the font size based on screen size
+    double fontSize =
+        screenWidth > 600 ? 18 : 14; // Larger screens use larger font
+
     return Scaffold(
       backgroundColor: Colors.green.shade800, // Green background
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0), // Padding around the screen
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Aligns children to the start (left)
-          children: [
-            // Card for School Year
-            _buildCard(
-              'School Year: ${studentDtr.isNotEmpty ? studentDtr[0]['dtr_school_year'] : 'N/A'}',
-            ),
-            // Card for Semester
-            _buildCard(
-              'Semester: ${studentDtr.isNotEmpty ? studentDtr[0]['dtr_semester'] : 'N/A'}',
-            ),
-            // Create Data Table
-            createDatatable(),
-          ],
+      body: Container(
+        color: const Color(0xFF006400),
+        child: SingleChildScrollView(
+          padding:
+              EdgeInsets.all(screenWidth * 0.05), // Padding around the screen
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Aligns children to the start (left)
+            children: [
+              // Card for School Year
+              // Card for Semester
+              _buildCard(
+                'Semester: ${studentDtr.isNotEmpty ? studentDtr[0]['session_name'] : 'N/A'}',
+                fontSize,
+              ),
+              // Create Data Table
+              createDatatable(fontSize),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // Create a reusable card widget with content
-  Widget _buildCard(String content) {
+  Widget _buildCard(String content, double fontSize) {
     return Card(
       margin:
           const EdgeInsets.symmetric(vertical: 10.0), // Margin around the card
@@ -82,8 +92,8 @@ class _StudentDtrState extends State<StudentDtr> {
         padding: const EdgeInsets.all(16.0), // Padding inside the card
         child: Text(
           content,
-          style: const TextStyle(
-            fontSize: 18, // Font size for the text
+          style: TextStyle(
+            fontSize: fontSize, // Dynamically set font size
             color: Colors.green, // Text color is green
             fontWeight: FontWeight.bold, // Bold text
           ),
@@ -93,7 +103,7 @@ class _StudentDtrState extends State<StudentDtr> {
   }
 
   // Create a DataTable inside a Card
-  Widget createDatatable() {
+  Widget createDatatable(double fontSize) {
     return Card(
       margin: const EdgeInsets.all(10.0), // Margin around the card
       color: Colors.white, // Card color
@@ -104,44 +114,73 @@ class _StudentDtrState extends State<StudentDtr> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal, // Enable horizontal scrolling
         child: DataTable(
-          columns: _columns(),
-          rows: _rows(),
-          headingTextStyle: const TextStyle(
+          columns: _columns(fontSize),
+          rows: _rows(fontSize),
+          headingTextStyle: TextStyle(
             color: Colors.green, // Green header text
             fontWeight: FontWeight.bold, // Bold header text
+            fontSize: fontSize, // Dynamically set font size for header
           ),
-          dataTextStyle: const TextStyle(
+          dataTextStyle: TextStyle(
             color: Colors.black, // Black text for data cells
+            fontSize: fontSize, // Dynamically set font size for data
           ),
         ),
       ),
     );
   }
 
-  // Define the columns of the DataTable
-  List<DataColumn> _columns() {
-    return const [
-      DataColumn(label: Text("Date")),
-      DataColumn(label: Text("Time In")),
-      DataColumn(label: Text("Time Out")),
-      DataColumn(label: Text("Time Rendered (Hours)")),
+  // Define the columns of the DataTable (Now only Date and Actions)
+  List<DataColumn> _columns(double fontSize) {
+    return [
+      DataColumn(label: Text("Date", style: TextStyle(fontSize: fontSize))),
+      DataColumn(label: Text("Actions", style: TextStyle(fontSize: fontSize))),
     ];
   }
 
   // Define the rows of the DataTable
-  List<DataRow> _rows() {
+  List<DataRow> _rows(double fontSize) {
     return studentDtr.map((data) {
-      String formattedTime = formatDutyTime(data['TotalRendered'] ?? 'N/A');
-
       return DataRow(
         cells: [
-          DataCell(Text(data['dtr_date'] ?? 'N/A')),
-          DataCell(Text(data['dtr_time_in'] ?? 'N/A')),
-          DataCell(Text(data['dtr_time_out'] ?? 'N/A')),
-          DataCell(Text(formattedTime)), // Displays formatted time
+          DataCell(Text(data['dtr_date'] ?? 'N/A',
+              style: TextStyle(fontSize: fontSize))),
+          DataCell(
+            ElevatedButton(
+              onPressed: () => _showDetailsDialog(data),
+              child: const Text("View Details"),
+            ),
+          ),
         ],
       );
     }).toList();
+  }
+
+  // Function to show the dialog with the detailed data
+  void _showDetailsDialog(Map<String, dynamic> data) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Details for ${data['dtr_date']}'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Time In: ${data['dtr_time_in'] ?? 'N/A'}'),
+              Text('Time Out: ${data['dtr_time_out'] ?? 'N/A'}'),
+              Text('Rendered Hours: ${data['TotalRendered'] ?? 'N/A'}'),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Fetch student DTR data from API

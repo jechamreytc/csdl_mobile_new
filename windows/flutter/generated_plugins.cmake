@@ -6,7 +6,10 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   firebase_auth
   firebase_core
+  permission_handler_windows
   qr_bar_code
+  simple_secure_storage_windows
+  webcrypto
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

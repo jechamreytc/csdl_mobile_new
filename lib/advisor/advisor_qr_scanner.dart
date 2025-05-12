@@ -13,6 +13,10 @@ class AdvisorQrScanner extends StatefulWidget {
 
 class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
   Barcode? _barcode;
+  String? _lastScannedId;
+  DateTime? _lastScanTime;
+  Duration _cooldownDuration =
+      const Duration(seconds: 5); // Prevent repeat within 5s
 
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
@@ -31,15 +35,28 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
   }
 
   void _handleBarcode(BarcodeCapture barcodes) {
+    final scannedBarcode = barcodes.barcodes.firstOrNull;
+    final scannedId = scannedBarcode?.displayValue;
+
+    if (scannedId == null) return;
+
+    final now = DateTime.now();
+
+    // Block if it's the same ID within the cooldown duration
+    if (_lastScannedId == scannedId &&
+        _lastScanTime != null &&
+        now.difference(_lastScanTime!) < _cooldownDuration) {
+      return;
+    }
+
     if (mounted) {
       setState(() {
-        _barcode = barcodes.barcodes.firstOrNull;
+        _barcode = scannedBarcode;
+        _lastScannedId = scannedId;
+        _lastScanTime = now;
       });
 
-      // Call the attendance function after a successful scan
-      if (_barcode != null) {
-        studentsAttendence();
-      }
+      studentsAttendence();
     }
   }
 
@@ -72,9 +89,9 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
     if (_barcode == null) return; // Safety check for null barcode
 
     try {
-      var url = Uri.parse("${SessionStorage.url}user.php");
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "students_id_number": _barcode!.displayValue,
+        "stud_active_id": _barcode!.displayValue,
       };
       Map<String, String> requestBody = {
         "operation": "studentsAttendance",
@@ -87,6 +104,7 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         if (res != 0) {
+          // Navigator.pop(context);
           print("Time in Success");
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Attendance marked successfully!")),

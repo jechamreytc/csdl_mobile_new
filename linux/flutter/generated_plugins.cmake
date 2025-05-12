@@ -4,7 +4,10 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
+  flutter_secure_storage
   qr_bar_code
+  simple_secure_storage_linux
+  webcrypto
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

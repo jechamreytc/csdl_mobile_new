@@ -3,9 +3,14 @@ import 'package:csdl_mobile/components/alert_dialog_dtr.dart';
 import 'package:csdl_mobile/components/app_bar.dart';
 import 'package:csdl_mobile/components/drawer_main.dart';
 import 'package:csdl_mobile/session_storage.dart';
+import 'package:csdl_mobile/student/edit_profile_sheet.dart';
+import 'package:csdl_mobile/student/request_schedule.dart';
+import 'package:csdl_mobile/student/student_account_settings.dart';
 import 'package:csdl_mobile/student/student_dtr.dart';
 import 'package:flutter/material.dart';
+import 'package:hidden_drawer_menu/hidden_drawer_menu.dart';
 import 'package:qr_bar_code/qr/src/qr_code.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:http/http.dart' as http;
 
 class Student extends StatefulWidget {
@@ -41,70 +46,68 @@ class _StudentState extends State<Student> {
   String timeRendered = "";
   String learningModalities = "";
   bool isLoading = true;
+  bool isScholarAssigned =
+      false; // Track whether the scholar is assigned or not
 
   @override
   void initState() {
     super.initState();
     getStudentsDetailsAndStudentDutyAssign();
+    scholarAssignedChecker(); // Check if the scholar is assigned
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarMain(
-        title: '',
-        backgroundColor: Color(0xFF006400), // Dark Green
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF006400),
       ),
-      drawer: DrawerMain(
-        headerColor: const Color(0xFF006400), // Dark Green
-        headerTitle: 'Student',
-        listTiles: [
-          ListTile(
-            leading: const Icon(
-              Icons.assignment_outlined,
-              color: Colors.white,
+      drawer: Drawer(
+        backgroundColor: const Color(0xFF006400),
+        child: ListView(
+          children: [
+            DrawerHeader(
+              child: Image.asset("assets/images/csdl_background_no_bg.jpg"),
             ),
-            title: const Text("Duty Assignment",
-                style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => StudentDtr(
+            ListTile(
+              title: const Text(
+                'Account Settings',
+                style: TextStyle(color: Colors.white),
+              ),
+              // onTap: () {
+              //   // Navigator.pop(context);
+              //   Navigator.push(
+              //     context,
+              //     MaterialPageRoute(
+              //       builder: (context) => StudentAccountSettings(
+              //         student_id: widget.student_id,
+              //       ),
+              //     ),
+              //   );
+              // },
+              onTap: () {
+                Navigator.pop(context);
+                showShadSheet(
+                  side: ShadSheetSide.right,
+                  context: context,
+                  builder: (context) => EditProfileSheet(
+                    side: ShadSheetSide.right,
                     student_id: widget.student_id,
                   ),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.file_copy,
-              color: Colors.white,
+                );
+              },
             ),
-            title: const Text("DTR", style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StudentDtr(
-                    student_id: "02-2425-23390",
-                  ),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.logout,
-              color: Colors.white,
+            ListTile(
+              title: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/home');
+              },
             ),
-            title: const Text("Logout", style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
-            },
-          ),
-        ],
+          ],
+        ),
       ),
       body: Container(
         color: const Color(0xFF006400), // Dark Green
@@ -452,6 +455,32 @@ class _StudentState extends State<Student> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  void scholarAssignedChecker() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      Map<String, dynamic> jsonData = {
+        "stud_active_id": widget.student_id,
+      };
+      Map<String, String> requestBody = {
+        "operation": "scholarAssignedChecker",
+        "json": jsonEncode(jsonData),
+      };
+      var response = await http.post(url, body: requestBody);
+      var res = jsonDecode(response.body);
+      if (res["COUNT(*)"] != 0) {
+        setState(() {
+          isScholarAssigned = true;
+        });
+      } else {
+        setState(() {
+          isScholarAssigned = false;
+        });
+      }
+    } catch (e) {
+      print(e);
     }
   }
 }

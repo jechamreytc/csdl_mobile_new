@@ -84,7 +84,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AdvisorEvaluation(
-                              scholar_id: scholar['stud_id'],
+                              scholar_id: scholar['stud_active_id'],
                               advisor_id: widget.advisor_id,
                             ),
                           ),
@@ -95,7 +95,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AdvisorEvaluationOffice(
-                              scholar_id: scholar['stud_id'],
+                              scholar_id: scholar['stud_active_id'],
                               advisor_id: widget.advisor_id,
                             ),
                           ),
