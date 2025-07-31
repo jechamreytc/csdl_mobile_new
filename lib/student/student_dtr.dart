@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:csdl_mobile/session_storage.dart';
+import 'package:csdl_mobile/student/student_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -53,27 +54,64 @@ class _StudentDtrState extends State<StudentDtr> {
         screenWidth > 600 ? 18 : 14; // Larger screens use larger font
 
     return Scaffold(
-      backgroundColor: Colors.green.shade800, // Green background
-      body: Container(
-        color: const Color(0xFF006400),
-        child: SingleChildScrollView(
-          padding:
-              EdgeInsets.all(screenWidth * 0.05), // Padding around the screen
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Aligns children to the start (left)
-            children: [
-              // Card for School Year
-              // Card for Semester
-              _buildCard(
-                'Semester: ${studentDtr.isNotEmpty ? studentDtr[0]['session_name'] : 'N/A'}',
-                fontSize,
-              ),
-              // Create Data Table
-              createDatatable(fontSize),
-            ],
+      // backgroundColor: Colors.green.shade800,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      drawer: StudentDrawer(student_id: widget.student_id), // Green background
+      body: Stack(
+        children: [
+          Image.asset(
+            'assets/images/csdl_background.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            alignment: Alignment.topLeft,
           ),
-        ),
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromRGBO(
+                      255, 255, 255, 0.95), // White with 50% transparency
+                  Color.fromRGBO(
+                      255, 255, 255, 0.95), // White with 50% transparency
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              top: kToolbarHeight + 8,
+            ),
+            child: Container(
+              color: const Color(0xFF006400),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(
+                    screenWidth * 0.05), // Padding around the screen
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment
+                      .start, // Aligns children to the start (left)
+                  children: [
+                    // Card for School Year
+                    // Card for Semester
+                    _buildCard(
+                      'Semester: ${studentDtr.isNotEmpty ? studentDtr[0]['session_name'] : 'N/A'}',
+                      fontSize,
+                    ),
+                    // Create Data Table
+                    createDatatable(fontSize),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -198,7 +236,7 @@ class _StudentDtrState extends State<StudentDtr> {
 
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
-      print(res);
+      print("print ni" + res);
       if (res != 0) {
         setState(() {
           studentDtr = res;

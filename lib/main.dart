@@ -3,11 +3,21 @@ import 'dart:async';
 import 'dart:math';
 // import 'package:csdl_mobile/advisor/advisor.dart';
 import 'package:csdl_mobile/advisor/advisor.dart';
-import 'package:csdl_mobile/advisor/advisor_hidden_drawer.dart';
+// import 'package:csdl_mobile/advisor/advisor_evaluation_office.dart';
+// import 'package:csdl_mobile/advisor/advisor_evalution.dart';
+// import 'package:csdl_mobile/advisor/advisor_hidden_drawer.dart';
+import 'package:csdl_mobile/advisor/advisor_scholar_list.dart';
 import 'package:csdl_mobile/components/change_password_page.dart';
+import 'package:csdl_mobile/entry_point.dart';
+import 'package:csdl_mobile/fresh_student/fresh_student.dart';
+import 'package:csdl_mobile/fresh_student/fresh_student_add_referral_component.dart';
+import 'package:csdl_mobile/fresh_student/fresh_student_referral_list.dart';
+import 'package:csdl_mobile/scholarship_request_form.dart';
 import 'package:csdl_mobile/student/student.dart';
-import 'package:csdl_mobile/student/student_hidden_drawer.dart';
+// import 'package:csdl_mobile/student/student_hidden_drawer.dart';
 import 'package:csdl_mobile/session_storage.dart';
+import 'package:csdl_mobile/student/student_dashboard.dart';
+import 'package:csdl_mobile/student/student_ocr.dart';
 // import 'package:csdl_mobile/student/student.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -15,7 +25,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-void main() {
+void main() async {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('Flutter error: ${details.exception}');
+  };
   runApp(const MyApp());
 }
 
@@ -24,20 +37,38 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShadApp.custom(
-      appBuilder: (context, theme) => GetMaterialApp(
+    return ShadApp(
+      builder: (context, theme) => GetMaterialApp(
         // theme: theme,
         builder: (context, child) {
           return ShadToaster(child: child!);
         },
         debugShowCheckedModeBanner: false,
+        // home: ScholarshipRequestForm(),
+        home: const EntryPoint(),
         // home: const HomePage(),
         // home: Student(
         //   student_id: "02-1234-56789",
         // ),
-        home: const Advisor(
-          advisor_id: "02-1213-00123",
-        ),
+        // home: StudentDashboard(
+        //   student_id: "02-1234-00066",
+        // ),
+        // home: const Advisor(
+        //   advisor_id: "02-1213-00123",
+        // ),
+        // home: const AdvisorScholarList(
+        //   advisor_id: "02-1617-00627",
+        // ),
+        // home: const AdvisorEvaluationOffice(
+        //     advisor_id: "02-1213-00123", scholar_id: "02-1234-56789"),
+        // home: FreshStudent(student_id: "02-1234-56789"),
+        // home: FreshStudentReferralList(
+        //   student_id: '02-2425-23321',
+        // ),
+        // home: FreshStudentAddReferralComponent(
+        //   student_id: '02-1234-56789',
+        // ),
+        // home: StudentOcr(student_id: '02-1617-00627'),
         routes: {
           "/home": (context) => const HomePage(),
         },
@@ -106,27 +137,30 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  void verifyCaptcha() {
-    if (_captchaController.text != generatedCaptcha) {
-      setState(() {
-        _isCaptchaValid = false;
-      });
-
+  bool verifyCaptcha() {
+    if (_captchaController.text.trim() != generatedCaptcha.trim()) {
+      _failedAttempts++;
       generateCaptcha();
-      setState(() {
-        _isCaptchaChecked = false;
-      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Incorrect Captcha! Try again.")),
+      if (_failedAttempts == 5) {
+        setState(() {
+          _isLocked = true;
+        });
+        updateLoginAttempt();
+      }
+
+      Get.snackbar(
+        "Alert",
+        "CAPTCHA does not match. Try again.",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
       );
 
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isCaptchaValid = true;
-        });
-      });
+      return false;
     }
+
+    return true;
   }
 
   void login() async {
@@ -144,28 +178,13 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.red,
         snackPosition: SnackPosition.BOTTOM,
         colorText: Colors.white,
-        icon: const Icon(
-          Icons.warning,
-          color: Colors.white,
-        ),
+        icon: const Icon(Icons.warning, color: Colors.white),
         margin: const EdgeInsets.only(top: 5),
       );
       return;
     }
 
-    if (_captchaController.text != generatedCaptcha) {
-      _failedAttempts++;
-      generateCaptcha();
-
-      if (_failedAttempts == 5) {
-        setState(() {
-          _isLocked = true;
-        });
-        print(1);
-        updateLoginAttempt();
-      }
-      return;
-    }
+    if (!verifyCaptcha()) return;
 
     try {
       var url = Uri.parse("${SessionStorage.url}user.php");
@@ -189,15 +208,12 @@ class _HomePageState extends State<HomePage> {
         if (res["status"] == 2) {
           if (res["stud_login_attempts"] == 1 ||
               res["supM_login_attempts"] == 1) {
-            Get.snackbar(
-              "Message",
-              "Account is Locked please Contact CSDL",
-              backgroundColor: Colors.red,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.warning, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
+            Get.snackbar("Message", "Account is Locked please Contact CSDL",
+                backgroundColor: Colors.red,
+                snackPosition: SnackPosition.BOTTOM,
+                colorText: Colors.white,
+                icon: const Icon(Icons.warning, color: Colors.white),
+                margin: const EdgeInsets.only(top: 5));
             setState(() {
               _isLocked = true;
               _isCaptchaVisible = false;
@@ -205,15 +221,12 @@ class _HomePageState extends State<HomePage> {
               _passwordController.clear();
             });
           } else {
-            Get.snackbar(
-              "Alert",
-              "Incorrect Username or Password",
-              backgroundColor: Colors.red,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.warning, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
+            Get.snackbar("Alert", "Incorrect Username or Password",
+                backgroundColor: Colors.red,
+                snackPosition: SnackPosition.BOTTOM,
+                colorText: Colors.white,
+                icon: const Icon(Icons.warning, color: Colors.white),
+                margin: const EdgeInsets.only(top: 5));
 
             _failedAttempts++;
             generateCaptcha();
@@ -222,44 +235,37 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 _isLocked = true;
               });
-              print(1);
               updateLoginAttempt();
             }
           }
         } else if (res == 0) {
           generateCaptcha();
-          Get.snackbar(
-            "Alert",
-            "Account doesn't exist",
-            backgroundColor: Colors.red,
-            snackPosition: SnackPosition.BOTTOM,
-            colorText: Colors.white,
-            icon: const Icon(Icons.warning, color: Colors.white),
-            margin: const EdgeInsets.only(top: 5),
-          );
+          Get.snackbar("Alert", "Account doesn't exist",
+              backgroundColor: Colors.red,
+              snackPosition: SnackPosition.BOTTOM,
+              colorText: Colors.white,
+              icon: const Icon(Icons.warning, color: Colors.white),
+              margin: const EdgeInsets.only(top: 5));
         } else if (res != 0 && res is Map<String, dynamic>) {
           _failedAttempts = 0;
 
-          if (res.containsKey('supM_id') || res.containsKey('supM_email')) {
+          if (res.containsKey('supM_id')) {
             String advisorId = res['supM_id'];
             bool isDefaultPassword = res['is_default_password'];
             setState(() {
               userIsSupervisor = true;
               advisor_id = advisorId;
               advName = res['supM_name'];
-              emailController.text = res['supM_email'];
+              emailController.text = res['supM_email'] ?? "";
             });
 
             if (res['supM_login_attempts'] == 1) {
-              Get.snackbar(
-                "Message",
-                "Account is Locked please Contact CSDL",
-                backgroundColor: Colors.red,
-                snackPosition: SnackPosition.BOTTOM,
-                colorText: Colors.white,
-                icon: const Icon(Icons.warning, color: Colors.white),
-                margin: const EdgeInsets.only(top: 5),
-              );
+              Get.snackbar("Message", "Account is Locked please Contact CSDL",
+                  backgroundColor: Colors.red,
+                  snackPosition: SnackPosition.BOTTOM,
+                  colorText: Colors.white,
+                  icon: const Icon(Icons.warning, color: Colors.white),
+                  margin: const EdgeInsets.only(top: 5));
               setState(() {
                 _isLocked = true;
                 _isCaptchaVisible = false;
@@ -277,52 +283,44 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             } else {
-              int authenticationStatus = res['supM_authentication_status'];
-              if (authenticationStatus == 1) {
+              int authStatus = res['supM_authentication_status'];
+              if (authStatus == 1) {
                 setState(() {
                   userIsSupervisorAuthentication = true;
                 });
                 _showOtpDialog();
               } else {
-                Get.snackbar(
-                  "Success",
-                  "Welcome " + res['supM_name'],
-                  backgroundColor: Colors.green,
-                  snackPosition: SnackPosition.BOTTOM,
-                  colorText: Colors.white,
-                  icon: const Icon(Icons.check, color: Colors.white),
-                  margin: const EdgeInsets.only(top: 5),
-                );
+                SessionStorage.setItem("advisor_id", advisor_id);
+                Get.snackbar("Success", "Welcome ${res['supM_name']}",
+                    backgroundColor: Colors.green,
+                    snackPosition: SnackPosition.BOTTOM,
+                    colorText: Colors.white,
+                    icon: const Icon(Icons.check, color: Colors.white),
+                    margin: const EdgeInsets.only(top: 5));
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Advisor(
-                            advisor_id: advisorId,
-                          )),
+                      builder: (context) => Advisor(advisor_id: advisorId)),
                 );
               }
             }
-          } else if (res.containsKey('stud_id') ||
-              res.containsKey('stud_email')) {
+          } else if (res.containsKey('stud_id')) {
             String studentId = res['stud_id'];
             bool isDefaultPassword = res['is_default_password'];
             setState(() {
               userIsStudent = true;
-              student_id = res['stud_id'];
+              student_id = studentId;
               studName = res['stud_name'];
-              emailController.text = res['stud_email'];
+              emailController.text = res['stud_email'] ?? "";
             });
 
             if (res['stud_login_attempts'] == 1) {
-              Get.snackbar(
-                "Message",
-                "Account is Locked please Contact CSDL",
-                backgroundColor: Colors.red,
-                snackPosition: SnackPosition.BOTTOM,
-                colorText: Colors.white,
-                icon: const Icon(Icons.warning, color: Colors.white),
-                margin: const EdgeInsets.only(top: 5),
-              );
+              Get.snackbar("Message", "Account is Locked please Contact CSDL",
+                  backgroundColor: Colors.red,
+                  snackPosition: SnackPosition.BOTTOM,
+                  colorText: Colors.white,
+                  icon: const Icon(Icons.warning, color: Colors.white),
+                  margin: const EdgeInsets.only(top: 5));
               setState(() {
                 _isLocked = true;
                 _isCaptchaVisible = false;
@@ -340,31 +338,46 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             } else {
-              int authenticationStatusStudent =
-                  res['stud_authentication_status'];
-              if (authenticationStatusStudent == 1) {
+              int authStatus = res['stud_authentication_status'];
+              if (authStatus == 1) {
                 _showOtpDialog();
               } else {
-                Get.snackbar(
-                  "Success",
-                  "Welcome " + res['stud_name'],
-                  backgroundColor: Colors.green,
-                  snackPosition: SnackPosition.BOTTOM,
-                  colorText: Colors.white,
-                  icon: const Icon(Icons.check, color: Colors.white),
-                  margin: const EdgeInsets.only(top: 5),
-                );
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Student(student_id: student_id),
-                  ),
-                );
+                Get.snackbar("Success", "Welcome ${res['stud_name']}",
+                    backgroundColor: Colors.green,
+                    snackPosition: SnackPosition.BOTTOM,
+                    colorText: Colors.white,
+                    icon: const Icon(Icons.check, color: Colors.white),
+                    margin: const EdgeInsets.only(top: 5));
+
+                String yearName = res['year_name'] ?? '';
+                String yearLevel =
+                    yearName.length >= 2 ? yearName.substring(0, 2) : '';
+
+                if (yearLevel == 'Y1') {
+                  SessionStorage.setItem("student_id", student_id);
+                  SessionStorage.setItem("is_fresh", "1");
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            FreshStudent(student_id: student_id)),
+                  );
+                } else {
+                  SessionStorage.setItem("student_id", student_id);
+                  SessionStorage.setItem("is_fresh", "0");
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            StudentDashboard(student_id: student_id)),
+                  );
+                }
               }
             }
           }
         }
       }
+
       print("Failed attempts: $_failedAttempts");
     } catch (e) {
       print("Error: $e");
@@ -611,10 +624,8 @@ class _HomePageState extends State<HomePage> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color.fromRGBO(
-                      255, 255, 255, 0.9), // White with 50% transparency
-                  Color.fromRGBO(
-                      255, 255, 255, 0.9), // White with 50% transparency
+                  Color.fromRGBO(255, 255, 255, 0.9),
+                  Color.fromRGBO(255, 255, 255, 0.9),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -632,7 +643,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 60,
                       fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 12, 94, 15),
+                      color: Color.fromARGB(255, 12, 94, 15),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -721,9 +732,7 @@ class _HomePageState extends State<HomePage> {
                           style: const TextStyle(
                               color: Colors.black, fontSize: 13),
                         ),
-                        SizedBox(
-                          height: 15,
-                        ),
+                        const SizedBox(height: 15),
                         Visibility(
                           visible: _isCaptchaVisible,
                           child: Column(
@@ -734,8 +743,7 @@ class _HomePageState extends State<HomePage> {
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 5),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(
-                                            0.2), // Green background with transparency
+                                        color: Colors.green.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(10),
                                         boxShadow: [
                                           BoxShadow(
@@ -746,10 +754,9 @@ class _HomePageState extends State<HomePage> {
                                         ],
                                       ),
                                       child: Center(
-                                        // Center the captcha numbers horizontally
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .center, // Centering the numbers
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: List.generate(
                                             generatedCaptcha.length,
                                             (index) {
@@ -760,11 +767,9 @@ class _HomePageState extends State<HomePage> {
                                                 child: Text(
                                                   generatedCaptcha[index],
                                                   style: TextStyle(
-                                                    fontSize:
-                                                        20, // Smaller font size for captcha
+                                                    fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors
-                                                        .white, // Numbers in white
+                                                    color: Colors.white,
                                                   ),
                                                 ),
                                               );
@@ -775,20 +780,17 @@ class _HomePageState extends State<HomePage> {
                                     ),
                               const SizedBox(height: 15),
                               SizedBox(
-                                width: 150, // Limiting width of the TextField
+                                width: 150,
                                 child: TextField(
                                   controller: _captchaController,
-                                  textAlign: TextAlign
-                                      .center, // Centering the input text
-                                  style: const TextStyle(
-                                      fontSize: 15), // Smaller text field size
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 15),
                                   decoration: InputDecoration(
                                     filled: true,
                                     fillColor: Colors.white,
                                     hintText: "Enter Captcha",
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical:
-                                            5), // Reduced padding to make the TextField smaller
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(vertical: 5),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
@@ -821,8 +823,7 @@ class _HomePageState extends State<HomePage> {
                                       _isLoadingCaptcha = true;
                                     });
 
-                                    await Future.delayed(
-                                        const Duration(seconds: 2));
+                                    await Future.delayed(Duration(seconds: 2));
 
                                     setState(() {
                                       _isCaptchaVisible = true;
@@ -840,27 +841,21 @@ class _HomePageState extends State<HomePage> {
                                         decoration: BoxDecoration(
                                           color: _isCaptchaChecked
                                               ? Colors.green
-                                              : Colors.grey, // Green if checked
+                                              : Colors.grey,
                                           borderRadius:
                                               BorderRadius.circular(5),
                                         ),
                                         child: _isCaptchaChecked
-                                            ? Icon(
-                                                Icons.check,
-                                                size: 20,
-                                                color: Colors.white,
-                                              )
+                                            ? Icon(Icons.check,
+                                                size: 20, color: Colors.white)
                                             : null,
                                       ),
                                       const SizedBox(width: 10),
-                                      Visibility(
-                                        visible: !_isLocked,
-                                        child: const Text(
-                                          "I'm not a robot",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 13,
-                                          ),
+                                      const Text(
+                                        "I'm not a robot",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
                                         ),
                                       ),
                                     ],
@@ -874,24 +869,20 @@ class _HomePageState extends State<HomePage> {
                         Visibility(
                           visible: !_isLocked,
                           child: SizedBox(
-                            width: double
-                                .infinity, // Stretch the button to the full width
+                            width: double.infinity,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green.withOpacity(0.5),
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      5), // No rounded corners
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
                               ),
                               child: const Text(
                                 "Login",
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
+                                    fontSize: 16, color: Colors.white),
                               ),
                               onPressed: () {
                                 login();
@@ -902,8 +893,7 @@ class _HomePageState extends State<HomePage> {
                         Visibility(
                           visible: !_isLocked,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment
-                                .end, // Align the text to the right
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               TextButton(
                                 onPressed: () {},
@@ -911,8 +901,7 @@ class _HomePageState extends State<HomePage> {
                                   "Forgot Password?",
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontStyle: FontStyle
-                                        .italic, // Optional: if you want to make the text italic
+                                    fontStyle: FontStyle.italic,
                                     decoration: TextDecoration.underline,
                                     decorationColor: Colors.white,
                                   ),
@@ -935,17 +924,51 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 90,
-                  ),
+                  const SizedBox(height: 90),
                   const Text(
                     "Powered by: PHINMA-COC",
-                    style: TextStyle(
-                      fontSize: 10,
-                    ),
+                    style: TextStyle(fontSize: 10),
                   ),
                 ],
               ),
+            ),
+          ),
+
+          // 🔽 ICON BUTTON MUST BE AT THE END OF Stack children 🔽
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            right: 10,
+            child: IconButton(
+              icon: Icon(Icons.info_outline,
+                  color: Color.fromARGB(255, 12, 94, 15)),
+              tooltip: 'Request Info',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Notice'),
+                      content: const Text(
+                        'This request is for students that are Returnee or Continuing.',
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('I understand'),
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close dialog
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ScholarshipRequestForm(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
