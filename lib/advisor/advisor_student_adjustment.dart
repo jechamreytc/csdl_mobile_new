@@ -3,6 +3,7 @@ import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'advisor_qr_scanner.dart'; // import scanner
+import 'package:intl/intl.dart';
 
 class AdvisorStudentAdjustment extends StatefulWidget {
   final String advisor_id;
@@ -22,8 +23,25 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
   final TextEditingController _hoursInputController = TextEditingController();
   final TextEditingController _minutesInputController = TextEditingController();
 
+  DateTime? _selectedDate;
   bool _isLoading = false;
   String _message = "";
+
+  void _pickDate() async {
+    DateTime now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 1),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
 
   void submitAdjustment() async {
     final hours = int.tryParse(_hoursInputController.text.trim()) ?? 0;
@@ -31,14 +49,17 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
 
     if (_studentIdController.text.trim().isEmpty ||
         _reasonController.text.trim().isEmpty ||
+        _selectedDate == null ||
         (hours == 0 && minutes == 0)) {
       setState(() {
-        _message = "Please fill all fields and enter hours or minutes.";
+        _message =
+            "Please fill all fields, select a date, and enter hours or minutes.";
       });
       return;
     }
 
-    final totalDeduction = -(hours + (minutes / 60));
+    final totalDeduction = hours + (minutes / 60);
+    final formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
 
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
@@ -48,6 +69,7 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
         "adj_supervisor_id": widget.advisor_id,
         "adj_reason": _reasonController.text.trim(),
         "adj_hours": totalDeduction.toStringAsFixed(2),
+        "adj_date": formattedDate,
       };
 
       Map<String, String> requestBody = {
@@ -62,6 +84,7 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
 
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
+
       setState(() {
         _isLoading = false;
         _message = res["status"] == "success"
@@ -74,6 +97,7 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
         _reasonController.clear();
         _hoursInputController.clear();
         _minutesInputController.clear();
+        _selectedDate = null;
       }
 
       print("Response: $res");
@@ -182,6 +206,27 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
                       }
                     },
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text("Exact Day to Adjust"),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedDate != null
+                        ? DateFormat("yyyy-MM-dd").format(_selectedDate!)
+                        : "No date selected",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _selectedDate != null ? Colors.black : Colors.grey,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _pickDate,
+                  child: const Text("Pick Date"),
                 ),
               ],
             ),

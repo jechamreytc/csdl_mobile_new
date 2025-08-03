@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math';
 // import 'package:csdl_mobile/advisor/advisor.dart';
 import 'package:csdl_mobile/advisor/advisor.dart';
+import 'package:csdl_mobile/advisor/advisor_qr_code.dart';
 // import 'package:csdl_mobile/advisor/advisor_evaluation_office.dart';
 // import 'package:csdl_mobile/advisor/advisor_evalution.dart';
 // import 'package:csdl_mobile/advisor/advisor_hidden_drawer.dart';
@@ -18,6 +19,7 @@ import 'package:csdl_mobile/student/student.dart';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/student_dashboard.dart';
 import 'package:csdl_mobile/student/student_ocr.dart';
+import 'package:csdl_mobile/student/student_qr_duty_registration.dart';
 // import 'package:csdl_mobile/student/student.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -44,6 +46,8 @@ class MyApp extends StatelessWidget {
           return ShadToaster(child: child!);
         },
         debugShowCheckedModeBanner: false,
+        // home: StudentQrDutyRegistration(student_id: "02-2223-07626"),
+        // home: AdvisorQrCode(supM_id: "02-2223-06742"),
         // home: ScholarshipRequestForm(),
         home: const EntryPoint(),
         // home: const HomePage(),
