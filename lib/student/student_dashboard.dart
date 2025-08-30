@@ -16,6 +16,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:io';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:csdl_mobile/student/student.dart';
 import 'dart:html' as html;
 
 class StudentDashboard extends StatefulWidget {
@@ -53,10 +54,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: StudentDrawer(student_id: widget.student_id),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+        child: AppBar(
+          backgroundColor:
+              Colors.transparent, // Make the AppBar background transparent
+          elevation: 0, // Remove the shadow of the AppBar
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png', // Path to your background image
+            height: 50,
+            width: 50, // Ensure the image covers the entire area
+          ),
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -183,7 +192,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   elevation: 4,
                 ),
                 onPressed: () {
-                  // handle navigation
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          Student(student_id: widget.student_id),
+                    ),
+                  );
                 },
                 child: const Text("View the full Details",
                     style: TextStyle(color: Colors.white)),

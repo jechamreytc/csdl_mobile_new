@@ -1,6 +1,7 @@
 import 'package:csdl_mobile/advisor/advisor.dart';
 import 'package:csdl_mobile/fresh_student/fresh_student.dart';
 import 'package:csdl_mobile/main.dart';
+import 'package:csdl_mobile/marketing/marketing.dart';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/student_dashboard.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ class EntryPoint extends StatelessWidget {
   Widget build(BuildContext context) {
     final studentId = SessionStorage.getItem("student_id");
     final advisorId = SessionStorage.getItem("advisor_id");
+    final adminId = SessionStorage.getItem("admin_email");
     final isFresh = SessionStorage.getItem("is_fresh");
 
     if (studentId != null) {
@@ -22,6 +24,8 @@ class EntryPoint extends StatelessWidget {
       }
     } else if (advisorId != null) {
       return Advisor(advisor_id: advisorId);
+    } else if (adminId != null) {
+      return MarketingDashboard(adminEmail: adminId);
     } else {
       return const HomePage(); // default login screen
     }

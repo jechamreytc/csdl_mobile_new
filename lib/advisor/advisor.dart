@@ -24,9 +24,18 @@ class _AdvisorState extends State<Advisor> {
     return Container(
       child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        appBar: AppBar(
-          title: const Text('Advisor 2'),
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+          child: AppBar(
+            backgroundColor:
+                Colors.transparent, // Make the AppBar background transparent
+            elevation: 0, // Remove the shadow of the AppBar
+            flexibleSpace: Image.asset(
+              'assets/images/coc_logo.png', // Path to your background image
+              height: 50,
+              width: 50, // Ensure the image covers the entire area
+            ),
+          ),
         ),
         drawer: AdvisorDrawer(
           advisorId: widget.advisor_id,

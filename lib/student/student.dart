@@ -63,396 +63,470 @@ class _StudentState extends State<Student> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+        child: AppBar(
+          backgroundColor:
+              Colors.transparent, // Make the AppBar background transparent
+          elevation: 0, // Remove the shadow of the AppBar
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png', // Path to your background image
+            height: 50,
+            width: 50, // Ensure the image covers the entire area
+          ),
+        ),
       ),
       drawer: StudentDrawer(student_id: widget.student_id),
       body: Stack(
         children: [
-          // Image.asset(
-          //   'assets/images/csdl_background.jpg',
-          //   fit: BoxFit.cover,
-          //   width: double.infinity,
-          //   height: double.infinity,
-          //   alignment: Alignment.topLeft,
-          // ),
+          // Soft light background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color.fromRGBO(
-                      255, 255, 255, 0.85), // White with 50% transparency
-                  Color.fromRGBO(
-                      255, 255, 255, 0.85), // White with 50% transparency
+                  Color.fromRGBO(255, 255, 255, 0.85),
+                  Color.fromRGBO(255, 255, 255, 0.85),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
           ),
-          const Column(
-            children: [
-              // Row(
-              //   children: [
-              //     Text(
-              //       "Monitoring Sheet",
-              //       style: TextStyle(
-              //         color: Colors.green,
-              //         fontSize: 27,
-              //         height: 0.9,
-              //       ),
-              //     ),
-              //   ],
-              // ),
-            ],
-          ),
+
           Center(
             child: isLoading
                 ? const CircularProgressIndicator()
                 : SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "DUTY ASSIGNMENT",
-                            style: TextStyle(
-                              fontSize: 35,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 35, 84, 37),
-                            ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Page Title
+                        SizedBox(height: 20),
+                        const Text(
+                          "DUTY ASSIGNMENT",
+                          textAlign: TextAlign.justify,
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            color: Color.fromARGB(255, 35, 84, 37),
+                            letterSpacing: 0.5,
                           ),
-                          SizedBox(height: 40),
-                          // Header and Student Information
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // const CircleAvatar(
-                                  //   radius: 35,
-                                  //   backgroundImage:
-                                  //       AssetImage('assets/images/sakana.jpg'),
-                                  // ),
-                                  // const SizedBox(height: 15),
-                                  // Text(
-                                  //   'Advisor: $dutyAdvisorFullName',
-                                  //   style: const TextStyle(
-                                  //     fontSize: 12,
-                                  //     color: Colors.white,
-                                  //   ),
-                                  // ),
-                                ],
+                        ),
+//                         const Text(
+//                           "Your current assigned schedule and details.",
+//                           textAlign: TextAlign.center,
+//                           style: TextStyle(
+//                             fontSize: 14,
+//                             fontWeight: FontWeight.w500,
+//                             color: Colors.black54,
+//                           ),
+//                         ),
+
+//                         const SizedBox(height: 8),
+
+// // Section heading before container
+//                         const Text(
+//                           "Assignment Information",
+//                           style: TextStyle(
+//                             fontSize: 18,
+//                             fontWeight: FontWeight.bold,
+//                             color: Colors.black87,
+//                           ),
+//                         ),
+
+//                         const SizedBox(height: 8),
+
+// // Small helper text under section heading
+//                         const Text(
+//                           "Please review your details carefully.",
+//                           style: TextStyle(
+//                             fontSize: 13,
+//                             fontWeight: FontWeight.w400,
+//                             color: Colors.black54,
+//                           ),
+//                         ),
+                        const SizedBox(height: 8),
+                        // Centered white card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0xFF0F172A),
+                                blurRadius: 12,
+                                offset: Offset(0, 6),
                               ),
-                              const SizedBox(width: 20),
-                              Expanded(
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Header subtext (optional branding lines)
+                              // Text(
+                              //   "Facilitator Name: $dutyAdvisorFullName",
+                              //   textAlign: TextAlign.center,
+                              //   style: const TextStyle(
+                              //     fontSize: 13,
+                              //     color: Colors.black87,
+                              //   ),
+                              // ),
+                              const SizedBox(height: 14),
+
+                              // Green info area
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade900,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: Colors.green.shade900, width: 2),
+                                ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      "Facilitator Name: $dutyAdvisorFullName",
-                                      style: TextStyle(
-                                        color: Colors.black,
+                                    // Name
+                                    _kvLine("NAME", studentFullName),
+
+                                    const SizedBox(height: 6),
+                                    _kvLine("Duty Day", dutyDay),
+                                    const SizedBox(height: 6),
+                                    _kvLine("Assigned Hours", totalDutyHours),
+                                    const SizedBox(height: 6),
+                                    _kvLine("Room", dutyRoomNumber),
+                                    const SizedBox(height: 6),
+                                    _kvLine(
+                                      scheduledTime.isNotEmpty
+                                          ? "Duty Time"
+                                          : "Office Time",
+                                      scheduledTime.isNotEmpty
+                                          ? scheduledTime
+                                          : dutyOfficeTime,
+                                    ),
+
+                                    _kvLine(
+                                      dutySubjectCode.isNotEmpty
+                                          ? "Subject Code"
+                                          : "Office",
+                                      dutySubjectCode.isNotEmpty
+                                          ? dutySubjectCode
+                                          : dutyOfficeName,
+                                    ),
+
+                                    _kvLine(
+                                      dutySubjectName.isNotEmpty
+                                          ? "Subject Name"
+                                          : "Building",
+                                      dutySubjectName.isNotEmpty
+                                          ? dutySubjectName
+                                          : dutyBuildingNumber,
+                                    ),
+
+                                    const SizedBox(height: 14),
+
+                                    // View Data Sheets button INSIDE green card
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor:
+                                              Colors.green.shade900,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          final studentId = widget.student_id;
+                                          final dtrData =
+                                              await fetchStudentDtr(studentId);
+
+                                          if (context.mounted) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return Dialog(
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            16),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          Colors.green.shade900,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                    ),
+                                                    child: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .stretch,
+                                                      children: [
+                                                        const Center(
+                                                          child: Text(
+                                                            "Current DTR",
+                                                            style: TextStyle(
+                                                              fontSize: 20,
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 10),
+                                                        Container(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  vertical: 6),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                            horizontal: 12,
+                                                            vertical: 6,
+                                                          ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                            boxShadow: const [
+                                                              BoxShadow(
+                                                                color: Colors
+                                                                    .black26,
+                                                                blurRadius: 3,
+                                                              )
+                                                            ],
+                                                          ),
+                                                          // child: Text(
+                                                          //   "Semester: ${dtrData.isNotEmpty ? dtrData[0]['session_name'] : 'N/A'}",
+                                                          //   textAlign: TextAlign
+                                                          //       .center,
+                                                          //   style:
+                                                          //       const TextStyle(
+                                                          //     color:
+                                                          //         Colors.green,
+                                                          //     fontWeight:
+                                                          //         FontWeight
+                                                          //             .bold,
+                                                          //   ),
+                                                          // ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 10),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(10),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child:
+                                                              SingleChildScrollView(
+                                                            scrollDirection:
+                                                                Axis.horizontal,
+                                                            child: DataTable(
+                                                              columnSpacing: 20,
+                                                              headingRowHeight:
+                                                                  40,
+                                                              headingRowColor:
+                                                                  WidgetStateProperty
+                                                                      .all(Colors
+                                                                          .white),
+                                                              columns: const [
+                                                                DataColumn(
+                                                                  label: Text(
+                                                                    "Date",
+                                                                    style: TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight.bold),
+                                                                  ),
+                                                                ),
+                                                                DataColumn(
+                                                                  label: Text(
+                                                                    "Actions",
+                                                                    style: TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight.bold),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                              rows: dtrData
+                                                                  .map((data) {
+                                                                return DataRow(
+                                                                  cells: [
+                                                                    DataCell(Text(
+                                                                        data['record_date'] ??
+                                                                            'N/A')),
+                                                                    DataCell(
+                                                                      IconButton(
+                                                                        icon:
+                                                                            Icon(
+                                                                          Icons
+                                                                              .remove_red_eye,
+                                                                          color: Colors
+                                                                              .grey
+                                                                              .shade600,
+                                                                        ),
+                                                                        onPressed:
+                                                                            () {
+                                                                          showDialog(
+                                                                            context:
+                                                                                context,
+                                                                            builder: (_) =>
+                                                                                AlertDialog(
+                                                                              backgroundColor: Colors.green.shade50,
+                                                                              shape: RoundedRectangleBorder(
+                                                                                borderRadius: BorderRadius.circular(12),
+                                                                              ),
+                                                                              title: Text(
+                                                                                "Details for ${data['record_date']}",
+                                                                                style: TextStyle(
+                                                                                  color: Colors.green.shade700,
+                                                                                  fontWeight: FontWeight.bold,
+                                                                                  fontSize: 20,
+                                                                                ),
+                                                                              ),
+                                                                              content: Padding(
+                                                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                                                                child: Column(
+                                                                                  mainAxisSize: MainAxisSize.min,
+                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                  children: [
+                                                                                    Text(
+                                                                                      "Time In: ${data['dtr_time_in'] ?? 'N/A'}",
+                                                                                      style: TextStyle(color: Colors.green.shade800, fontSize: 16),
+                                                                                    ),
+                                                                                    const SizedBox(height: 8),
+                                                                                    Text(
+                                                                                      "Time Out: ${data['dtr_time_out'] ?? 'N/A'}",
+                                                                                      style: TextStyle(color: Colors.green.shade800, fontSize: 16),
+                                                                                    ),
+                                                                                    const SizedBox(height: 8),
+                                                                                    Text(
+                                                                                      "Rendered Hours: ${data['TotalRendered'] ?? 'N/A'}",
+                                                                                      style: TextStyle(color: Colors.green.shade800, fontSize: 16),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                              actions: [
+                                                                                TextButton(
+                                                                                  onPressed: () => Navigator.pop(context),
+                                                                                  child: Text(
+                                                                                    "Close",
+                                                                                    style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600),
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          );
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                );
+                                                              }).toList(),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 10),
+                                                        Align(
+                                                          alignment: Alignment
+                                                              .centerRight,
+                                                          child: TextButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                    context),
+                                                            child: const Text(
+                                                              "Close",
+                                                              style: TextStyle(
+                                                                  color: Colors
+                                                                      .white),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(Icons.assignment,
+                                            size: 18),
+                                        label: const Text(
+                                          "View Data Sheets",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    _infoBox("NAME: $studentFullName"),
-                                    // Padding(
-                                    //   padding: const EdgeInsets.only(
-                                    //     left: 20,
-                                    //   ),
-                                    //   child: Text(
-                                    //     "ID: $studentIdNumber",
-                                    //     style: const TextStyle(
-                                    //       color: Colors.black,
-                                    //       fontSize: 12,
-                                    //     ),
-                                    //   ),
-                                    // ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton.icon(
-                                onPressed: () async {
-                                  final studentId =
-                                      widget.student_id; // Replace with real ID
-                                  final dtrData =
-                                      await fetchStudentDtr(studentId);
+                        ),
 
-                                  if (context.mounted) {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return Dialog(
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(20)),
-                                          backgroundColor: Colors.transparent,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green.shade800,
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.stretch,
-                                              children: [
-                                                const Center(
-                                                  child: Text(
-                                                    "Current DTR",
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Container(
-                                                  margin: const EdgeInsets
-                                                      .symmetric(vertical: 6),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 6),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20),
-                                                    boxShadow: const [
-                                                      BoxShadow(
-                                                          color: Colors.black26,
-                                                          blurRadius: 3)
-                                                    ],
-                                                  ),
-                                                  child: Text(
-                                                    "Semester: ${dtrData.isNotEmpty ? dtrData[0]['session_name'] : 'N/A'}",
-                                                    textAlign: TextAlign.center,
-                                                    style: const TextStyle(
-                                                      color: Colors.green,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                  ),
-                                                  child: SingleChildScrollView(
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    child: DataTable(
-                                                      columnSpacing: 20,
-                                                      headingRowHeight: 40,
-                                                      headingRowColor:
-                                                          WidgetStateProperty
-                                                              .all(
-                                                                  Colors.white),
-                                                      columns: const [
-                                                        DataColumn(
-                                                          label: Text(
-                                                            "Date",
-                                                            style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          ),
-                                                        ),
-                                                        DataColumn(
-                                                          label: Text(
-                                                            "Actions",
-                                                            style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                      rows: dtrData.map(
-                                                        (data) {
-                                                          return DataRow(
-                                                            cells: [
-                                                              DataCell(Text(
-                                                                  data['record_date'] ??
-                                                                      'N/A')),
-                                                              DataCell(
-                                                                IconButton(
-                                                                  icon: Icon(
-                                                                      Icons
-                                                                          .remove_red_eye,
-                                                                      color: Colors
-                                                                          .grey
-                                                                          .shade600),
-                                                                  onPressed:
-                                                                      () {
-                                                                    showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (_) =>
-                                                                              AlertDialog(
-                                                                        backgroundColor: Colors
-                                                                            .green
-                                                                            .shade50, // light green background
-                                                                        shape:
-                                                                            RoundedRectangleBorder(
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(12),
-                                                                        ),
-                                                                        title:
-                                                                            Text(
-                                                                          "Details for ${data['record_date']}",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                Colors.green.shade700,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            fontSize:
-                                                                                20,
-                                                                          ),
-                                                                        ),
-                                                                        content:
-                                                                            Padding(
-                                                                          padding: const EdgeInsets
-                                                                              .symmetric(
-                                                                              horizontal: 20,
-                                                                              vertical: 8),
-                                                                          child:
-                                                                              Column(
-                                                                            mainAxisSize:
-                                                                                MainAxisSize.min,
-                                                                            crossAxisAlignment:
-                                                                                CrossAxisAlignment.start,
-                                                                            children: [
-                                                                              Text(
-                                                                                "Time In: ${data['dtr_time_in'] ?? 'N/A'}",
-                                                                                style: TextStyle(color: Colors.green.shade800, fontSize: 16),
-                                                                              ),
-                                                                              SizedBox(height: 8),
-                                                                              Text(
-                                                                                "Time Out: ${data['dtr_time_out'] ?? 'N/A'}",
-                                                                                style: TextStyle(color: Colors.green.shade800, fontSize: 16),
-                                                                              ),
-                                                                              SizedBox(height: 8),
-                                                                              Text(
-                                                                                "Rendered Hours: ${data['TotalRendered'] ?? 'N/A'}",
-                                                                                style: TextStyle(color: Colors.green.shade800, fontSize: 16),
-                                                                              ),
-                                                                            ],
-                                                                          ),
-                                                                        ),
-                                                                        actions: [
-                                                                          TextButton(
-                                                                            onPressed: () =>
-                                                                                Navigator.pop(context),
-                                                                            child:
-                                                                                Text(
-                                                                              "Close",
-                                                                              style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600),
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          );
-                                                        },
-                                                      ).toList(),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Align(
-                                                  alignment:
-                                                      Alignment.centerRight,
-                                                  child: TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(context),
-                                                    child: const Text(
-                                                      "Close",
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  }
-                                },
-                                icon: const Icon(
-                                  Icons.assignment,
-                                  color: Color.fromARGB(255, 35, 84, 37),
-                                  size: 17,
-                                ),
-                                label: const Text(
-                                  "View Data Sheets",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color.fromARGB(255, 35, 84, 37),
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
+                        // Reminder Text outside the card, at the bottom
+                        const SizedBox(height: 22),
+                        const Text(
+                          "Reminder:\n"
+                          "● Be on time and follow your assigned schedule\n"
+                          "● Wear your uniform and your student ID.\n"
+                          "● Be respectful and courteous at all times.\n"
+                          "● Complete tasks properly and ask if unsure.\n"
+                          "● Inform your supervisor if you can’t report.\n"
+                          "● Follow office rules and Guidelines.\n",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "If you do not follow your duty assignment schedule, we will not allow you to transfer or reschedule your duty.",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
 
-                          // First Info Row
-                          // _infoBox(
-                          //     "Learning Modalities: $learningModalities"),
-
-                          _infoBox("Duty Day: $dutyDay"),
-
-                          _infoBox("Assigned Hours: $totalDutyHours"),
-                          _infoBox("Room: $dutyRoomNumber"),
-
-                          // Second Info Row
-                          _infoBox(scheduledTime.isNotEmpty
-                              ? "Duty Time: $scheduledTime"
-                              : "Office Time: $dutyOfficeTime"),
-                          _infoBox(dutySubjectCode.isNotEmpty
-                              ? "Subject Code: $dutySubjectCode"
-                              : "Office: $dutyOfficeName"),
-                          _infoBox(dutySubjectName.isNotEmpty
-                              ? "Subject Name: $dutySubjectName"
-                              : "Building: $dutyBuildingNumber"),
-                          // _infoBox("Time Rendered: $timeRendered"),
-                          // _infoBox("Time Remaining: $dutyRemainingTime"),
-
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
                   ),
           ),
@@ -461,7 +535,36 @@ class _StudentState extends State<Student> {
     );
   }
 
-  // Outside the class
+  // Key-Value line inside the green card (white text)
+  Widget _kvLine(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$label: ",
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // (kept for compatibility if you still call it elsewhere)
   Widget buildStudentDtrDialogContent(
     List<dynamic> dtrData,
     Function(Map<String, dynamic>) onDetailTap,
@@ -488,6 +591,7 @@ class _StudentState extends State<Student> {
     );
   }
 
+  // Original _infoBox retained (unused in new design but kept intact)
   Widget _infoBox(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),

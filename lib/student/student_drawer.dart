@@ -2,6 +2,7 @@ import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/edit_profile_sheet.dart';
 import 'package:csdl_mobile/student/student.dart';
 import 'package:csdl_mobile/student/student_dashboard.dart';
+import 'package:csdl_mobile/student/student_job_type.dart';
 import 'package:csdl_mobile/student/student_ocr.dart';
 // import 'package:csdl_mobile/student/student_dashboard.dart';
 // import 'package:csdl_mobile/student/student_dtr.dart';
@@ -161,7 +162,23 @@ class _StudentDrawerState extends State<StudentDrawer> {
 
               Navigator.pushReplacementNamed(context, '/'); // Back to login
             },
-          )
+          ),
+          buildDrawerItem(
+            index: 5,
+            icon: Icons.settings,
+            label: "Job Type",
+            onTap: () {
+              setState(() => selectedIndex = 5);
+              Navigator.pop(context);
+              showShadSheet(
+                side: ShadSheetSide.right,
+                context: context,
+                builder: (context) => StudentJobType(
+                  student_id: widget.student_id,
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

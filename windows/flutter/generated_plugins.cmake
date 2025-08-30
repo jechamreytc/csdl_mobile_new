@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   permission_handler_windows
   qr_bar_code
   simple_secure_storage_windows
+  url_launcher_windows
   webcrypto
 )
 

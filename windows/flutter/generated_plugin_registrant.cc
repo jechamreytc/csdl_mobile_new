@@ -12,6 +12,7 @@
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
 #include <qr_bar_code/qr_bar_code_plugin_c_api.h>
 #include <simple_secure_storage_windows/simple_secure_storage_windows_plugin_c_api.h>
+#include <url_launcher_windows/url_launcher_windows.h>
 #include <webcrypto/webcrypto_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
@@ -27,6 +28,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("QrBarCodePluginCApi"));
   SimpleSecureStorageWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("SimpleSecureStorageWindowsPluginCApi"));
+  UrlLauncherWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
   WebcryptoPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("WebcryptoPlugin"));
 }

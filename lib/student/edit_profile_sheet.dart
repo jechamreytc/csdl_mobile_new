@@ -326,14 +326,14 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           actions: [
             ShadButton(
               child:
-                  const Text('Cancel', style: TextStyle(color: Colors.black)),
+                  const Text('Cancel', style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(context); // Close dialog on cancel
               },
             ),
             ShadButton(
               child: const Text('Verify OTP',
-                  style: TextStyle(color: Colors.black)),
+                  style: TextStyle(color: Colors.white)),
               onPressed: () {
                 // Verify OTP entered by user
                 if (otpController.text == generatedOtp) {
