@@ -192,106 +192,123 @@ class _HKLeadsPageState extends State<HKLeadsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("HK Leads"),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            tooltip: "Show Reports",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ApprovedLeadsPage(
-                    adminEmail: widget.adminEmail,
-                  ),
-                ),
-              );
-            },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png',
+            height: 50,
+            width: 50,
           ),
-        ],
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.bar_chart),
+              tooltip: "Show Reports",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ApprovedLeadsPage(
+                      adminEmail: widget.adminEmail,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       drawer: MarketingDrawer(adminEmail: widget.adminEmail),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 16),
-                itemCount: referrals.length,
-                itemBuilder: (context, index) {
-                  final referral = referrals[index];
-                  final name =
-                      '${referral['freshmen_ref_firstname']} ${referral['freshmen_ref_lastname']}';
-                  final contact = referral['freshmen_ref_contact_number'];
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade50, Colors.green.shade200],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: SafeArea(
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  itemCount: referrals.length,
+                  itemBuilder: (context, index) {
+                    final referral = referrals[index];
+                    final name =
+                        '${referral['freshmen_ref_firstname']} ${referral['freshmen_ref_lastname']}';
+                    final contact = referral['freshmen_ref_contact_number'];
 
-                  return Card(
-                    elevation: 4,
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () => showReferralDetailsModal(referral),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                    return Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => showReferralDetailsModal(referral),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(contact),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      updateStatus(
+                                          referral['freshmen_ref_id'], 1);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      minimumSize: const Size(70, 30),
+                                    ),
+                                    child: const Text('Approve',
+                                        style: TextStyle(fontSize: 15)),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(contact),
+                                  const SizedBox(height: 5),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      updateStatus(
+                                          referral['freshmen_ref_id'], 2);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      minimumSize: const Size(70, 30),
+                                    ),
+                                    child: const Text('Decline',
+                                        style: TextStyle(fontSize: 15)),
+                                  ),
                                 ],
                               ),
-                            ),
-                            Column(
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    updateStatus(
-                                        referral['freshmen_ref_id'], 1);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    minimumSize: const Size(70, 30),
-                                  ),
-                                  child: const Text('Approve',
-                                      style: TextStyle(fontSize: 15)),
-                                ),
-                                const SizedBox(height: 5),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    updateStatus(
-                                        referral['freshmen_ref_id'], 2);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    minimumSize: const Size(70, 30),
-                                  ),
-                                  child: const Text('Decline',
-                                      style: TextStyle(fontSize: 15)),
-                                ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
     );

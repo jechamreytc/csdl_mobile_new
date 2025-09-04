@@ -91,17 +91,18 @@ class _ApprovedLeadsPageState extends State<ApprovedLeadsPage> {
         // Fields to exclude from automatic inclusion since we're handling them specially
         final excludeFields = {
           'freshmen_ref_firstname',
-          'freshmen_ref_lastname', 
+          'freshmen_ref_lastname',
           'freshmen_ref_middlename',
           'freshmen_ref_middle_name', // Handle both possible field names
         };
 
         // Add any additional fields that might exist in the data
         final orderedKeys = <String>[];
-        
+
         // First add our predefined columns (full_name will always be first)
-        orderedKeys.add('full_name'); // Always include full name as first column
-        
+        orderedKeys
+            .add('full_name'); // Always include full name as first column
+
         for (var key in columnMapping.keys) {
           if (key != 'full_name' && allKeys.contains(key)) {
             orderedKeys.add(key);
@@ -130,17 +131,21 @@ class _ApprovedLeadsPageState extends State<ApprovedLeadsPage> {
             // Handle special formatting for specific fields
             if (key == 'full_name') {
               // Combine first name, middle name, and last name
-              final firstName = lead['freshmen_ref_firstname']?.toString().trim() ?? '';
-              final middleName = lead['freshmen_ref_middlename']?.toString().trim() ?? 
-                               lead['freshmen_ref_middle_name']?.toString().trim() ?? '';
-              final lastName = lead['freshmen_ref_lastname']?.toString().trim() ?? '';
-              
+              final firstName =
+                  lead['freshmen_ref_firstname']?.toString().trim() ?? '';
+              final middleName =
+                  lead['freshmen_ref_middlename']?.toString().trim() ??
+                      lead['freshmen_ref_middle_name']?.toString().trim() ??
+                      '';
+              final lastName =
+                  lead['freshmen_ref_lastname']?.toString().trim() ?? '';
+
               // Build full name with proper spacing
               final nameParts = <String>[];
               if (firstName.isNotEmpty) nameParts.add(firstName);
               if (middleName.isNotEmpty) nameParts.add(middleName);
               if (lastName.isNotEmpty) nameParts.add(lastName);
-              
+
               value = nameParts.join(' ');
             } else if (key == 'freshmen_ref_email_add') {
               value = value?.toString().toLowerCase().trim() ?? '';
@@ -234,8 +239,8 @@ class _ApprovedLeadsPageState extends State<ApprovedLeadsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Approved HK Leads"),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
@@ -252,20 +257,25 @@ class _ApprovedLeadsPageState extends State<ApprovedLeadsPage> {
                   itemCount: approvedLeads.length,
                   itemBuilder: (context, index) {
                     final lead = approvedLeads[index];
-                    
+
                     // Build full name consistently with Excel export
-                    final firstName = lead['freshmen_ref_firstname']?.toString().trim() ?? '';
-                    final middleName = lead['freshmen_ref_middlename']?.toString().trim() ?? 
-                                     lead['freshmen_ref_middle_name']?.toString().trim() ?? '';
-                    final lastName = lead['freshmen_ref_lastname']?.toString().trim() ?? '';
-                    
+                    final firstName =
+                        lead['freshmen_ref_firstname']?.toString().trim() ?? '';
+                    final middleName = lead['freshmen_ref_middlename']
+                            ?.toString()
+                            .trim() ??
+                        lead['freshmen_ref_middle_name']?.toString().trim() ??
+                        '';
+                    final lastName =
+                        lead['freshmen_ref_lastname']?.toString().trim() ?? '';
+
                     final nameParts = <String>[];
                     if (firstName.isNotEmpty) nameParts.add(firstName);
                     if (middleName.isNotEmpty) nameParts.add(middleName);
                     if (lastName.isNotEmpty) nameParts.add(lastName);
-                    
+
                     final fullName = nameParts.join(' ');
-                    
+
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           vertical: 6, horizontal: 10),

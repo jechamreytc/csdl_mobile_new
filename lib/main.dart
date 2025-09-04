@@ -173,6 +173,7 @@ class _HomePageState extends State<HomePage> {
     return true;
   }
 
+
   void login() async {
     if (_isLocked) return;
 
@@ -182,7 +183,6 @@ class _HomePageState extends State<HomePage> {
     });
 
     if (!_isUsernameValid || !_isPasswordValid) {
-      // Clear input fields when validation fails
       _usernameController.clear();
       _passwordController.clear();
       _captchaController.clear();
@@ -205,29 +205,24 @@ class _HomePageState extends State<HomePage> {
       String username = _usernameController.text.trim();
       String password = _passwordController.text;
 
-      // Prepare jsonData and detect if it's admin based on email format
-      Map<String, dynamic> jsonData = {
-        "username": username,
-        "password": password,
-      };
-
-      /// This is the key: choose adminLogin or login
-      String operation = username.contains("@") ? "adminLogin" : "login";
+      // Always use "login" operation to let backend identify user type
+      String operation = "login";
 
       var url = Uri.parse("${SessionStorage.url}user.php");
 
       Map<String, String> requestBody = {
         "operation": operation,
-        "json": jsonEncode(jsonData),
+        "json": jsonEncode({"username": username, "password": password}),
       };
+      print("jsondata" + jsonEncode(requestBody));
 
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
       print("🔵 Raw response: ${response.body}");
 
+      // Account doesn't exist
       if (res == 0) {
         generateCaptcha();
-        // Clear input fields when account doesn't exist
         _usernameController.clear();
         _passwordController.clear();
         _captchaController.clear();
@@ -244,79 +239,69 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-// Handle Admin login
-      if (operation == "adminLogin") {
-        if (res is Map<String, dynamic> && res.containsKey("adm_email")) {
-          int userLevel = int.tryParse(res["adm_user_level"].toString()) ?? 0;
+      _failedAttempts = 0;
 
-          if (userLevel == 5) {
-            String email = res["adm_email"];
-            String name = res["adm_name"];
+      // -------------------
+      // Admin login
+      // -------------------
+      if (res is Map<String, dynamic> && res.containsKey("adm_email")) {
+        int userLevel = int.tryParse(res["adm_user_level"].toString()) ?? 0;
 
-            Get.snackbar(
-              "Success",
-              "Welcome $name",
-              backgroundColor: Colors.green,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.check, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
+        if (userLevel == 5) {
+          String email = res["adm_email"];
+          String name = res["adm_name"];
 
-            SessionStorage.setItem("admin_email", email);
+          Get.snackbar(
+            "Success",
+            "Welcome $name",
+            backgroundColor: Colors.green,
+            snackPosition: SnackPosition.BOTTOM,
+            colorText: Colors.white,
+            icon: const Icon(Icons.check, color: Colors.white),
+            margin: const EdgeInsets.only(top: 5),
+          );
 
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MarketingDashboard(adminEmail: email),
-              ),
-            );
-            return;
-          } else {
-            // User level not 5, show error and clear inputs
-            _usernameController.clear();
-            _passwordController.clear();
-            _captchaController.clear();
+          SessionStorage.setItem("admin_email", email);
 
-            Get.snackbar(
-              "Access Denied",
-              "You do not have permission to login as admin.",
-              backgroundColor: Colors.red,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.block, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
-            return;
-          }
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MarketingDashboard(adminEmail: email),
+            ),
+          );
+          return;
         } else {
-          // Clear input fields when admin response is invalid
+          // User level not 5, show error and clear inputs
           _usernameController.clear();
           _passwordController.clear();
           _captchaController.clear();
 
           Get.snackbar(
-            "Alert",
-            "Invalid admin response",
+            "Access Denied",
+            "You do not have permission to login as admin.",
             backgroundColor: Colors.red,
             snackPosition: SnackPosition.BOTTOM,
             colorText: Colors.white,
-            icon: const Icon(Icons.warning, color: Colors.white),
+            icon: const Icon(Icons.block, color: Colors.white),
             margin: const EdgeInsets.only(top: 5),
           );
           return;
         }
       }
+      // -------------------
+      // Supervisor login
+      // -------------------
+      else if (res.containsKey("supM_email")) {
+        String advisorEmail = res['supM_email'];
+        bool isDefaultPassword = res['is_default_password'];
 
-      // Handle Student / Supervisor login
-      if (res is Map<String, dynamic> &&
-          res.containsKey("status") &&
-          res["status"] == 2) {
-        // Locked account
-        if ((res.containsKey("stud_login_attempts") &&
-                res["stud_login_attempts"] == 1) ||
-            (res.containsKey("supM_login_attempts") &&
-                res["supM_login_attempts"] == 1)) {
+        setState(() {
+          userIsSupervisor = true;
+          advName = res['supM_name'];
+          emailController.text = advisorEmail;
+        });
+
+        if (res['supM_login_attempts'] == 1) {
           Get.snackbar(
             "Message",
             "Account is Locked please Contact CSDL",
@@ -332,185 +317,131 @@ class _HomePageState extends State<HomePage> {
             _usernameController.clear();
             _passwordController.clear();
           });
+        } else if (isDefaultPassword) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChangePasswordPage(
+                userId: advisorEmail, // Use email
+                isAdvisor: true,
+              ),
+            ),
+          );
         } else {
-          // Incorrect login details
-          // Clear input fields when login credentials are incorrect
-          _usernameController.clear();
-          _passwordController.clear();
-          _captchaController.clear();
+          int authStatus = res['supM_authentication_status'];
+          if (authStatus == 1) {
+            setState(() {
+              userIsSupervisorAuthentication = true;
+            });
+            _showOtpDialog();
+          } else {
+            SessionStorage.setItem("advisor_email", advisorEmail);
+            Get.snackbar(
+              "Success",
+              "Welcome ${res['supM_name']}",
+              backgroundColor: Colors.green,
+              snackPosition: SnackPosition.BOTTOM,
+              colorText: Colors.white,
+              icon: const Icon(Icons.check, color: Colors.white),
+              margin: const EdgeInsets.only(top: 5),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Advisor(advisor_id: advisorEmail)),
+            );
+          }
+        }
+      }
+      // -------------------
+      // Student login
+      // -------------------
+      else if (res.containsKey("stud_id")) {
+        String studentId = res['stud_id'];
+        bool isDefaultPassword = res['is_default_password'];
 
+        setState(() {
+          userIsStudent = true;
+          student_id = studentId;
+          studName = res['stud_name'];
+          emailController.text = res['stud_email'] ?? "";
+        });
+
+        if (res['stud_login_attempts'] == 1) {
           Get.snackbar(
-            "Alert",
-            "Incorrect Username or Password",
+            "Message",
+            "Account is Locked please Contact CSDL",
             backgroundColor: Colors.red,
             snackPosition: SnackPosition.BOTTOM,
             colorText: Colors.white,
             icon: const Icon(Icons.warning, color: Colors.white),
             margin: const EdgeInsets.only(top: 5),
           );
-
-          _failedAttempts++;
-          generateCaptcha();
-
-          if (_failedAttempts == 5) {
-            setState(() {
-              _isLocked = true;
-            });
-            updateLoginAttempt();
-          }
-        }
-      } else if (res is Map<String, dynamic>) {
-        _failedAttempts = 0;
-
-        // Supervisor login
-        if (res.containsKey('supM_id')) {
-          String advisorId = res['supM_id'];
-          bool isDefaultPassword = res['is_default_password'];
-
           setState(() {
-            userIsSupervisor = true;
-            advisor_id = advisorId;
-            advName = res['supM_name'];
-            emailController.text = res['supM_email'] ?? "";
+            _isLocked = true;
+            _isCaptchaVisible = false;
+            _usernameController.clear();
+            _passwordController.clear();
           });
-
-          if (res['supM_login_attempts'] == 1) {
+        } else if (isDefaultPassword) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChangePasswordPage(
+                userId: studentId,
+                isAdvisor: false,
+              ),
+            ),
+          );
+        } else {
+          int authStatus = res['stud_authentication_status'];
+          if (authStatus == 1) {
+            _showOtpDialog();
+          } else {
             Get.snackbar(
-              "Message",
-              "Account is Locked please Contact CSDL",
-              backgroundColor: Colors.red,
+              "Success",
+              "Welcome ${res['stud_name']}",
+              backgroundColor: Colors.green,
               snackPosition: SnackPosition.BOTTOM,
               colorText: Colors.white,
-              icon: const Icon(Icons.warning, color: Colors.white),
+              icon: const Icon(Icons.check, color: Colors.white),
               margin: const EdgeInsets.only(top: 5),
             );
-            setState(() {
-              _isLocked = true;
-              _isCaptchaVisible = false;
-              _usernameController.clear();
-              _passwordController.clear();
-            });
-          } else if (isDefaultPassword) {
+
+            String yearName = res['year_name'] ?? '';
+            String yearLevel =
+                yearName.length >= 2 ? yearName.substring(0, 2) : '';
+
+            SessionStorage.setItem("student_id", studentId);
+            SessionStorage.setItem("is_fresh", yearLevel == 'Y1' ? "1" : "0");
+
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => ChangePasswordPage(
-                  userId: advisorId,
-                  isAdvisor: true,
-                ),
+                builder: (context) => yearLevel == 'Y1'
+                    ? FreshStudent(student_id: studentId)
+                    : StudentDashboard(student_id: studentId),
               ),
             );
-          } else {
-            int authStatus = res['supM_authentication_status'];
-            if (authStatus == 1) {
-              setState(() {
-                userIsSupervisorAuthentication = true;
-              });
-              _showOtpDialog();
-            } else {
-              SessionStorage.setItem("advisor_id", advisor_id);
-              Get.snackbar(
-                "Success",
-                "Welcome ${res['supM_name']}",
-                backgroundColor: Colors.green,
-                snackPosition: SnackPosition.BOTTOM,
-                colorText: Colors.white,
-                icon: const Icon(Icons.check, color: Colors.white),
-                margin: const EdgeInsets.only(top: 5),
-              );
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => Advisor(advisor_id: advisorId)),
-              );
-            }
           }
         }
-        // Student login
-        else if (res.containsKey('stud_id')) {
-          String studentId = res['stud_id'];
-          bool isDefaultPassword = res['is_default_password'];
-
-          setState(() {
-            userIsStudent = true;
-            student_id = studentId;
-            studName = res['stud_name'];
-            emailController.text = res['stud_email'] ?? "";
-          });
-
-          if (res['stud_login_attempts'] == 1) {
-            Get.snackbar(
-              "Message",
-              "Account is Locked please Contact CSDL",
-              backgroundColor: Colors.red,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.warning, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
-            setState(() {
-              _isLocked = true;
-              _isCaptchaVisible = false;
-              _usernameController.clear();
-              _passwordController.clear();
-            });
-          } else if (isDefaultPassword) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChangePasswordPage(
-                  userId: studentId,
-                  isAdvisor: false,
-                ),
-              ),
-            );
-          } else {
-            int authStatus = res['stud_authentication_status'];
-            if (authStatus == 1) {
-              _showOtpDialog();
-            } else {
-              Get.snackbar(
-                "Success",
-                "Welcome ${res['stud_name']}",
-                backgroundColor: Colors.green,
-                snackPosition: SnackPosition.BOTTOM,
-                colorText: Colors.white,
-                icon: const Icon(Icons.check, color: Colors.white),
-                margin: const EdgeInsets.only(top: 5),
-              );
-
-              String yearName = res['year_name'] ?? '';
-              String yearLevel =
-                  yearName.length >= 2 ? yearName.substring(0, 2) : '';
-
-              if (yearLevel == 'Y1') {
-                SessionStorage.setItem("student_id", student_id);
-                SessionStorage.setItem("is_fresh", "1");
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          FreshStudent(student_id: student_id)),
-                );
-              } else {
-                SessionStorage.setItem("student_id", student_id);
-                SessionStorage.setItem("is_fresh", "0");
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          StudentDashboard(student_id: student_id)),
-                );
-              }
-            }
-          }
-        }
+      } else {
+        // If response doesn't match any user type
+        Get.snackbar(
+          "Alert",
+          "Invalid login response",
+          backgroundColor: Colors.red,
+          snackPosition: SnackPosition.BOTTOM,
+          colorText: Colors.white,
+          icon: const Icon(Icons.warning, color: Colors.white),
+          margin: const EdgeInsets.only(top: 5),
+        );
+        _usernameController.clear();
+        _passwordController.clear();
+        _captchaController.clear();
       }
-
-      print("Failed attempts: $_failedAttempts");
     } catch (e) {
       print("❌ Error: $e");
-      // Clear input fields when an error occurs
       _usernameController.clear();
       _passwordController.clear();
       _captchaController.clear();
@@ -596,15 +527,17 @@ class _HomePageState extends State<HomePage> {
           title: const Text('Enter OTP', style: TextStyle(color: Colors.white)),
           actions: [
             ShadButton(
+              backgroundColor: Color(0xFF104038),
               child:
-                  const Text('Cancel', style: TextStyle(color: Colors.black)),
+                  const Text('Cancel', style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(context); // Close dialog on cancel
               },
             ),
             ShadButton(
+              backgroundColor: Color(0xFF104038),
               child: const Text('Verify OTP',
-                  style: TextStyle(color: Colors.black)),
+                  style: TextStyle(color: Colors.white)),
               onPressed: () {
                 // Verify OTP entered by user
                 if (otpController.text == generatedOtp) {
@@ -641,7 +574,7 @@ class _HomePageState extends State<HomePage> {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              Student(student_id: student_id)),
+                              StudentDashboard(student_id: student_id)),
                     );
                   }
                 } else {
@@ -686,6 +619,7 @@ class _HomePageState extends State<HomePage> {
                     generatedOtp = generateOtp(); // Generate OTP
                     sendOtp(emailController.text, generatedOtp); // Send OTP
                   },
+                  backgroundColor: Color(0xFF104038),
                 ),
                 // Display message after OTP is sent
                 if (generatedOtp.isNotEmpty) ...[

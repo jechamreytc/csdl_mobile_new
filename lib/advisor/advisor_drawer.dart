@@ -68,7 +68,7 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
                   left: 0,
                   top: 120,
                   child: Text(
-                    "DASHBOARD",
+                    "DRAWER",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

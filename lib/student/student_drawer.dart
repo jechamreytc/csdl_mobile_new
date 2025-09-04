@@ -20,6 +20,7 @@ class StudentDrawer extends StatefulWidget {
 
 class _StudentDrawerState extends State<StudentDrawer> {
   int selectedIndex = 0;
+  bool settingsExpanded = false; // NEW
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +35,10 @@ class _StudentDrawerState extends State<StudentDrawer> {
               children: [
                 Positioned(
                   left: 0,
-                  top: 10,
+                  top: 15,
                   child: Container(
-                    width: 60,
-                    height: 60,
+                    width: 70,
+                    height: 70,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       image: DecorationImage(
@@ -50,7 +51,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
                 ),
                 const Positioned(
                   left: 80,
-                  top: 10,
+                  top: 15,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -70,7 +71,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
                   left: 0,
                   top: 120,
                   child: Text(
-                    "DASHBOARD",
+                    "DRAWER",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -102,7 +103,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
           // DUTY ASSIGNMENT
           buildDrawerItem(
             index: 1,
-            icon: Icons.dvr_rounded,
+            icon: Icons.assignment,
             label: "Duty Assignment",
             onTap: () {
               setState(() => selectedIndex = 1);
@@ -119,7 +120,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
           buildDrawerItem(
             index: 2,
             icon: Icons.send,
-            label: "Send Available Schedule",
+            label: "Document Upload & Status",
             onTap: () {
               setState(() => selectedIndex = 2);
               Navigator.pushReplacement(
@@ -150,6 +151,75 @@ class _StudentDrawerState extends State<StudentDrawer> {
               );
             },
           ),
+//           Container(
+//             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//             decoration: BoxDecoration(
+//               color: selectedIndex == 10
+//                   ? const Color(0xFF104038)
+//                   : Colors.transparent,
+//             ),
+//             child: ListTile(
+//               leading: const Icon(Icons.settings, color: Colors.white),
+//               title: const Text("Settings & Privacy",
+//                   style: TextStyle(color: Colors.white)),
+//               trailing: Icon(
+//                 settingsExpanded
+//                     ? Icons.keyboard_arrow_up
+//                     : Icons.keyboard_arrow_down,
+//                 color: Colors.white,
+//               ),
+//               onTap: () {
+//                 setState(() {
+//                   settingsExpanded = !settingsExpanded;
+//                   selectedIndex = 10; // mark settings as selected
+//                 });
+//               },
+//             ),
+//           ),
+
+// // Sub-menu Personal Details
+//           if (settingsExpanded) ...[
+//             Padding(
+//               padding: const EdgeInsets.only(left: 30.0),
+//               child: buildDrawerItem(
+//                 index: 21,
+//                 icon: Icons.person,
+//                 label: "Personal Details",
+//                 onTap: () {
+//                   setState(() => selectedIndex = 21); // Set selected here
+//                   Navigator.pop(context);
+//                   showShadSheet(
+//                     side: ShadSheetSide.right,
+//                     context: context,
+//                     builder: (context) => EditProfileSheet(
+//                       side: ShadSheetSide.right,
+//                       student_id: widget.student_id,
+//                     ),
+//                   );
+//                 },
+//               ),
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.only(left: 30.0),
+//               child: buildDrawerItem(
+//                 index: 22,
+//                 icon: Icons.lock,
+//                 label: "Password & Security",
+//                 onTap: () {
+//                   setState(() => selectedIndex = 22); // Set selected here
+//                   Navigator.pop(context);
+//                   showShadSheet(
+//                     side: ShadSheetSide.right,
+//                     context: context,
+//                     builder: (context) => EditProfileSheet(
+//                       side: ShadSheetSide.right,
+//                       student_id: widget.student_id,
+//                     ),
+//                   );
+//                 },
+//               ),
+//             ),
+//           ],
 
 // LOGOUT
           buildDrawerItem(
@@ -163,22 +233,22 @@ class _StudentDrawerState extends State<StudentDrawer> {
               Navigator.pushReplacementNamed(context, '/'); // Back to login
             },
           ),
-          buildDrawerItem(
-            index: 5,
-            icon: Icons.settings,
-            label: "Job Type",
-            onTap: () {
-              setState(() => selectedIndex = 5);
-              Navigator.pop(context);
-              showShadSheet(
-                side: ShadSheetSide.right,
-                context: context,
-                builder: (context) => StudentJobType(
-                  student_id: widget.student_id,
-                ),
-              );
-            },
-          ),
+          // buildDrawerItem(
+          //   index: 5,
+          //   icon: Icons.settings,
+          //   label: "Job Type",
+          //   onTap: () {
+          //     setState(() => selectedIndex = 5);
+          //     Navigator.pop(context);
+          //     showShadSheet(
+          //       side: ShadSheetSide.right,
+          //       context: context,
+          //       builder: (context) => StudentJobType(
+          //         student_id: widget.student_id,
+          //       ),
+          //     );
+          //   },
+          // ),
         ],
       ),
     );

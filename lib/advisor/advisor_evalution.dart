@@ -109,123 +109,137 @@ class _AdvisorEvaluationState extends State<AdvisorEvaluation> {
       drawer: AdvisorDrawer(advisorId: widget.advisor_id),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                Image.asset(
-                  'assets/images/csdl_background.jpg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  alignment: Alignment.topLeft,
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade50, Colors.green.shade200],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromRGBO(255, 255, 255, 0.95),
-                        Color.fromRGBO(255, 255, 255, 0.95),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+              ),
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/images/csdl_background.jpg',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    alignment: Alignment.topLeft,
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color.fromRGBO(255, 255, 255, 0.95),
+                          Color.fromRGBO(255, 255, 255, 0.95),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      top: kToolbarHeight + 8, left: 23.0, right: 23.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (currentStep == 0) ...[
-                          const Text("Performance",
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 10),
-                          ...List.generate(performanceQuestions.length,
-                              (index) {
-                            final key = "${index + 1}";
-                            return buildQuestionRow(performanceQuestions[index],
-                                key, selectedValuesPerformance);
-                          }),
-                          Center(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  currentStep = 1;
-                                });
-                              },
-                              child: const Text("Next"),
-                            ),
-                          ),
-                        ] else if (currentStep == 1) ...[
-                          const Text("General Attributes",
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 10),
-                          ...List.generate(generalQuestions.length, (index) {
-                            final key = "${index + 1}";
-                            return buildQuestionRow(generalQuestions[index],
-                                key, selectedValuesGeneral);
-                          }),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    currentStep = 0;
-                                  });
-                                },
-                                child: const Text("Back"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    currentStep = 2;
-                                  });
-                                },
-                                child: const Text("Next"),
-                              ),
-                            ],
-                          ),
-                        ] else if (currentStep == 2) ...[
-                          const Text("Attendance",
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 10),
-                          ...List.generate(attendanceQuestions.length, (index) {
-                            final key = "${index + 1}";
-                            return buildQuestionRow(attendanceQuestions[index],
-                                key, selectedValuesAttendance);
-                          }),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        top: kToolbarHeight + 8, left: 23.0, right: 23.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (currentStep == 0) ...[
+                            const Text("Performance",
+                                style: TextStyle(
+                                    fontSize: 20, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
+                            ...List.generate(performanceQuestions.length,
+                                (index) {
+                              final key = "${index + 1}";
+                              return buildQuestionRow(
+                                  performanceQuestions[index],
+                                  key,
+                                  selectedValuesPerformance);
+                            }),
+                            Center(
+                              child: ElevatedButton(
                                 onPressed: () {
                                   setState(() {
                                     currentStep = 1;
                                   });
                                 },
-                                child: const Text("Back"),
+                                child: const Text("Next"),
                               ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  submitStudentEvaluation();
-                                },
-                                child: const Text("Submit"),
-                              ),
-                            ],
-                          ),
-                        ]
-                      ],
+                            ),
+                          ] else if (currentStep == 1) ...[
+                            const Text("General Attributes",
+                                style: TextStyle(
+                                    fontSize: 20, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
+                            ...List.generate(generalQuestions.length, (index) {
+                              final key = "${index + 1}";
+                              return buildQuestionRow(generalQuestions[index],
+                                  key, selectedValuesGeneral);
+                            }),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      currentStep = 0;
+                                    });
+                                  },
+                                  child: const Text("Back"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      currentStep = 2;
+                                    });
+                                  },
+                                  child: const Text("Next"),
+                                ),
+                              ],
+                            ),
+                          ] else if (currentStep == 2) ...[
+                            const Text("Attendance",
+                                style: TextStyle(
+                                    fontSize: 20, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
+                            ...List.generate(attendanceQuestions.length,
+                                (index) {
+                              final key = "${index + 1}";
+                              return buildQuestionRow(
+                                  attendanceQuestions[index],
+                                  key,
+                                  selectedValuesAttendance);
+                            }),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      currentStep = 1;
+                                    });
+                                  },
+                                  child: const Text("Back"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    submitStudentEvaluation();
+                                  },
+                                  child: const Text("Submit"),
+                                ),
+                              ],
+                            ),
+                          ]
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }

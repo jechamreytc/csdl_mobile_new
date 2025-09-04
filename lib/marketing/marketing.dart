@@ -25,10 +25,19 @@ class MarketingDashboard extends StatelessWidget {
         ),
       ),
       drawer: MarketingDrawer(adminEmail: adminEmail), // ✅ Step 3: Pass it here
-      body: const Center(
-        child: Text(
-          "Welcome to the Marketing Dashboard!",
-          style: TextStyle(fontSize: 20),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: const Center(
+          child: Text(
+            "Welcome to the Marketing Dashboard!",
+            style: TextStyle(fontSize: 20),
+          ),
         ),
       ),
     );

@@ -33,45 +33,82 @@ class _FreshStudentAddReferralComponentState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+      drawer: FreshStudentDrawer(student_id: widget.student_id),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png',
+            height: 50,
+            width: 50,
+          ),
+        ),
       ),
-      drawer: FreshStudentDrawer(
-        student_id: widget.student_id,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTextField("Last Name", lastNameController),
-              _buildTextField("First Name", firstNameController),
-              _buildTextField("Middle Name", middleNameController),
-              _buildTextField("Contact Number", contactNumberController,
-                  prefixText: "+63"),
-              _buildTextField("Email Address", emailController,
-                  keyboardType: TextInputType.emailAddress),
-              _buildTextField("Address", addressController),
-              _buildTextField("SHS School Name", shsSchoolController),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF104038),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Card(
+            color: Colors.white,
+            elevation: 4,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      "Referral Information",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField("Last Name", lastNameController),
+                    _buildTextField("First Name", firstNameController),
+                    _buildTextField("Middle Name", middleNameController),
+                    _buildTextField("Contact Number", contactNumberController,
+                        prefixText: "+63"),
+                    _buildTextField("Email Address", emailController,
+                        keyboardType: TextInputType.emailAddress),
+                    _buildTextField("Address", addressController),
+                    _buildTextField("SHS School Name", shsSchoolController),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF104038),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          addReferral();
+                        }
+                      },
+                      child: const Text(
+                        " Add HK Lead",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ],
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    addReferral();
-                  }
-                },
-                child: const Text("ADD HK LEAD",
-                    style: TextStyle(color: Colors.white)),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -81,20 +118,26 @@ class _FreshStudentAddReferralComponentState
   Widget _buildTextField(String label, TextEditingController controller,
       {TextInputType keyboardType = TextInputType.text, String? prefixText}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: const TextStyle(color: Color(0xFF104038)),
           filled: true,
-          fillColor: const Color(0xFF104038),
-          labelStyle: const TextStyle(color: Colors.white),
+          fillColor: Colors.green.shade50,
           prefixText: prefixText,
-          prefixStyle: const TextStyle(color: Colors.white),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          prefixStyle: const TextStyle(color: Color(0xFF104038)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF104038)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF104038), width: 2),
+          ),
         ),
-        style: const TextStyle(color: Colors.white),
         validator: (value) =>
             value == null || value.isEmpty ? 'Required' : null,
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
+import 'package:csdl_mobile/student/student_job_type.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -23,62 +24,135 @@ class _StudentOcrState extends State<StudentOcr> {
   String? schoolYear;
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('PDF Picker and Available Schedule'),
-        centerTitle: true,
-      ),
-      drawer: StudentDrawer(
-        student_id: widget.student_id,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  ElevatedButton(
-                    onPressed: _pickPDFText,
-                    child: Text('Pick PDF'),
-                  ),
-                  if (studentNumber != null && schoolYear != null) ...[
-                    Text('Student Number: $studentNumber'),
-                    Text('School Year: $schoolYear'),
-                  ],
-                  if (scheduleData.isNotEmpty)
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: DataTable(
-                          columns: [
-                            DataColumn(label: Text('Day')),
-                            DataColumn(label: Text('From')),
-                            DataColumn(label: Text('To')),
-                          ],
-                          rows: _generateDataTableRows(),
-                        ),
-                      ),
-                    ),
-                  if (extractedText != null && scheduleData.isEmpty)
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Text(extractedText!),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+        child: AppBar(
+          backgroundColor:
+              Colors.transparent, // Make the AppBar background transparent
+          elevation: 0, // Remove the shadow of the AppBar
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png', // Path to your background image
+            height: 50,
+            width: 50, // Ensure the image covers the entire area
           ),
-          if (scheduleData.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _saveScheduleData,
-                child: Text('Save Data'),
+        ),
+      ),
+      drawer: StudentDrawer(student_id: widget.student_id),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black87,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                ),
+                icon: const Icon(Icons.assignment),
+                label: const Text("SBO/WORKING Student Portal"),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          StudentJobType(student_id: widget.student_id),
+                    ),
+                  );
+                },
               ),
-            ),
-        ],
+
+              const SizedBox(height: 32),
+
+              // File upload container
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.teal.shade800, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey.shade100,
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.picture_as_pdf,
+                          size: 48, color: Colors.teal),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Upload your Official Registration Form (ORF) here to get a HK duty",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: _pickPDFText,
+                        child: const Text("Choose a PDF File"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Display extracted info
+              if (studentNumber != null && schoolYear != null) ...[
+                Text('Student Number: $studentNumber',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('School Year: $schoolYear'),
+                const SizedBox(height: 16),
+              ],
+
+              // Schedule table
+              if (scheduleData.isNotEmpty)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: DataTable(
+                      columns: const [
+                        DataColumn(label: Text('Day')),
+                        DataColumn(label: Text('From')),
+                        DataColumn(label: Text('To')),
+                      ],
+                      rows: _generateDataTableRows(),
+                    ),
+                  ),
+                ),
+
+              // Raw text fallback
+              if (extractedText != null && scheduleData.isEmpty)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Text(extractedText!),
+                  ),
+                ),
+
+              // Save button
+              if (scheduleData.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.save),
+                    label: const Text('Save Data'),
+                    onPressed: _saveScheduleData,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 14),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -153,155 +153,181 @@ class _StudentJobTypeState extends State<StudentJobType> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Student Job Type"),
-        backgroundColor: Colors.green.shade700, // Green color for AppBar
+      backgroundColor: const Color(0xFFF1F4F8),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+        child: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          backgroundColor:
+              Colors.transparent, // Make the AppBar background transparent
+          elevation: 0, // Remove the shadow of the AppBar
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png', // Path to your background image
+            height: 50,
+            width: 50, // Ensure the image covers the entire area
+          ),
+        ),
       ),
-      drawer: StudentDrawer(student_id: widget.student_id),
+      // appBar: AppBar(
+      //   title: const Text(""),
+
+      // ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Note: This form is only available for **SBO** or **Working Student**.",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+          : Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 600),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade50, Colors.green.shade200],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "SBO / Working Student Document Upload",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      "Select Job Type:",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Please select your current job type and upload the required document (referral letter).",
+                        style: TextStyle(fontSize: 16),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Radio button options for job type selection
-                    Card(
-                      color: Colors.green.shade50, // Light green background
-                      child: Column(
-                        children: [
-                          RadioListTile<String>(
-                            title: const Text("SBO"),
-                            value: "SBO",
-                            groupValue: selectedJobType,
-                            onChanged: (value) =>
-                                setState(() => selectedJobType = value),
-                          ),
-                          RadioListTile<String>(
-                            title: const Text("Working Student"),
-                            value: "Working Student",
-                            groupValue: selectedJobType,
-                            onChanged: (value) =>
-                                setState(() => selectedJobType = value),
-                          ),
-                        ],
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Select Job Type:",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // File picker
-                    Row(
-                      children: [
-                        ElevatedButton(
+                      const SizedBox(height: 8),
+                      Card(
+                        color: Colors.green.shade50,
+                        child: Column(
+                          children: [
+                            RadioListTile<String>(
+                              title: const Text("SBO"),
+                              value: "SBO",
+                              groupValue: selectedJobType,
+                              onChanged: (value) =>
+                                  setState(() => selectedJobType = value),
+                            ),
+                            RadioListTile<String>(
+                              title: const Text("Working Student"),
+                              value: "Working Student",
+                              groupValue: selectedJobType,
+                              onChanged: (value) =>
+                                  setState(() => selectedJobType = value),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: ElevatedButton.icon(
                           onPressed: pickFile,
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(
-                                Colors.green.shade700),
-                            foregroundColor:
-                                MaterialStateProperty.all(Colors.white),
-                          ),
-                          child: const Text("Select File"),
+                          icon: const Icon(Icons.attach_file),
+                          label: const Text("Select File"),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            selectedFileName ?? "No file selected",
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (selectedFileName != null)
+                        Text(
+                          "Selected: $selectedFileName",
+                          style: const TextStyle(fontSize: 16),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Show the "View Image" button only if the file is selected
-                    if (selectedFile != null || selectedFileBytes != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              // Show the image in an AlertDialog when clicked
-                              showDialog(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: const Text("Preview Image"),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      kIsWeb
-                                          ? Image.memory(
-                                              selectedFileBytes!,
-                                              height: 300,
-                                              width: 300,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.file(
-                                              selectedFile!,
-                                              height: 300,
-                                              width: 300,
-                                              fit: BoxFit.cover,
-                                            ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(
-                                          context), // Close the dialog
-                                      child: const Text("Close"),
-                                    ),
+                      const SizedBox(height: 20),
+                      if (selectedFile != null || selectedFileBytes != null)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text("Preview Document"),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    kIsWeb
+                                        ? Image.memory(
+                                            selectedFileBytes!,
+                                            height: 300,
+                                            width: 300,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.file(
+                                            selectedFile!,
+                                            height: 300,
+                                            width: 300,
+                                            fit: BoxFit.cover,
+                                          ),
                                   ],
                                 ),
-                              );
-                            },
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
-                                  Colors.green.shade700),
-                              foregroundColor:
-                                  MaterialStateProperty.all(Colors.white),
-                            ),
-                            child: const Text("View Image"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("Close"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.image),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal.shade600,
+                            foregroundColor: Colors.white,
                           ),
-                          const SizedBox(height: 20),
-                        ],
+                          label: const Text("View Image"),
+                        ),
+                      const SizedBox(height: 30),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: isUploading ? null : uploadJobType,
+                          icon: const Icon(Icons.cloud_upload),
+                          label: isUploading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text("Upload Job Type"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade800,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
-
-                    // Upload Button
-                    ElevatedButton(
-                      onPressed: isUploading ? null : uploadJobType,
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all(Colors.green.shade700),
-                        foregroundColor:
-                            MaterialStateProperty.all(Colors.white),
-                      ),
-                      child: isUploading
-                          ? const CircularProgressIndicator()
-                          : const Text("Upload Job Type"),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

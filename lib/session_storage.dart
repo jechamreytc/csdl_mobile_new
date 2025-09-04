@@ -3,7 +3,7 @@ import 'dart:html' as html;
 class SessionStorage {
   static const String url = "http://localhost/finalhk/api/";
 
-  // static const String url = "http://10.135.100.242/finalhk/api/";
+  // static const String url = "http://192.168.1.146/finalhk/api/";
 
   static void setItem(String key, String value) {
     html.window.localStorage[key] = value;

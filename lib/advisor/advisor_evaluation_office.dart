@@ -36,70 +36,80 @@ class _AdvisorEvaluationOfficeState extends State<AdvisorEvaluationOffice> {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       drawer: AdvisorDrawer(advisorId: widget.advisor_id),
-      body: Stack(
-        children: [
-          Image.asset(
-            'assets/images/csdl_background.jpg',
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            alignment: Alignment.topLeft,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color.fromRGBO(255, 255, 255, 0.95),
-                  Color.fromRGBO(255, 255, 255, 0.95),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+        ),
+        child: Stack(
+          children: [
+            Image.asset(
+              'assets/images/csdl_background.jpg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              alignment: Alignment.topLeft,
+            ),
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromRGBO(255, 255, 255, 0.95),
+                    Color.fromRGBO(255, 255, 255, 0.95),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(
-                top: kToolbarHeight + 8, left: 23.0, right: 23.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                if (currentStep == 0) ...[
-                  const Text(
-                    "Advisor Evaluation - Areas",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(
+                  top: kToolbarHeight + 8, left: 23.0, right: 23.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   const SizedBox(height: 20),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: officeQuestions.length,
-                      itemBuilder: (context, index) {
-                        final question = officeQuestions[index];
-                        final questionId =
-                            question['evaluation_office_questions_id']
-                                .toString();
-                        final questionText =
-                            question['evaluation_office_questions_question'];
+                  if (currentStep == 0) ...[
+                    const Text(
+                      "Advisor Evaluation - Areas",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: officeQuestions.length,
+                        itemBuilder: (context, index) {
+                          final question = officeQuestions[index];
+                          final questionId =
+                              question['evaluation_office_questions_id']
+                                  .toString();
+                          final questionText =
+                              question['evaluation_office_questions_question'];
 
-                        return buildQuestionRow(
-                            questionText, questionId, selectedValuesAreas);
-                      },
+                          return buildQuestionRow(
+                              questionText, questionId, selectedValuesAreas);
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        submitStudentEvaluation();
-                      },
-                      child: const Text("Submit"),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          submitStudentEvaluation();
+                        },
+                        child: const Text("Submit"),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -199,5 +209,4 @@ class _AdvisorEvaluationOfficeState extends State<AdvisorEvaluationOffice> {
       print("Error getting evaluation questions: $e");
     }
   }
-
 }

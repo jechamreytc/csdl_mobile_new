@@ -5,6 +5,7 @@ import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/student_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:csdl_mobile/fresh_student/fresh_student_announcement.dart';
 // import 'package:qr_bar_code/qr/src/qr_code.dart';
 import 'package:http/http.dart' as http;
 
@@ -56,140 +57,196 @@ class _FreshStudentState extends State<FreshStudent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+        child: AppBar(
+          backgroundColor:
+              Colors.transparent, // Make the AppBar background transparent
+          elevation: 0, // Remove the shadow of the AppBar
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png', // Path to your background image
+            height: 50,
+            width: 50, // Ensure the image covers the entire area
+          ),
+        ),
       ),
       drawer: FreshStudentDrawer(
         student_id: widget.student_id,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: ListView(
-            children: [
-              const SizedBox(height: 10),
-              const Text(
-                "DASHBOARD",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF104038),
-                  fontSize: 40,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ListView(
+              children: [
+                const SizedBox(height: 10),
+                const Text(
+                  "DASHBOARD",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF104038),
+                    fontSize: 40,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Profile row
-              Row(
-                children: [
-                  // Profile image
-                  // const CircleAvatar(
-                  //   radius: 30,
-                  //   backgroundImage:
-                  //       AssetImage('assets/images/csdl_background.jpg'),
-                  // ),
-                  // const SizedBox(
-                  //   width: 40,
-                  // ),
-
-                  // Name & ID with green pills
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 30, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF104038),
+                // Profile row
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Color(0xFF104038),
+                          child:
+                              Icon(Icons.person, size: 30, color: Colors.white),
                         ),
-                        child: Text(
-                          "NAME : $freshStudentName",
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        "ID:    ${widget.student_id}",
-                        style: TextStyle(
-                          color: Color(0xFF104038),
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      if (warningText.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 3, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: warningColor,
-                            borderRadius: BorderRadius.circular(8),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                freshStudentName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF104038),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "ID: ${widget.student_id}",
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              if (warningText.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: warningColor.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: warningColor, width: 1),
+                                  ),
+                                  child: Text(
+                                    warningText,
+                                    style: TextStyle(
+                                      color: warningColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          child: Text(
-                            warningText,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // Progress bar
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Referral Progress",
+                          style: const TextStyle(
+                            color: Color(0xFF104038),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        LinearPercentIndicator(
+                          lineHeight: 20.0,
+                          percent:
+                              (totalReferrals / referralGoal).clamp(0.0, 1.0),
+                          center: Text(
+                            totalReferrals >= referralGoal
+                                ? "Completed"
+                                : "$totalReferrals / $referralGoal",
                             style: const TextStyle(
-                              color: Colors.black,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          animation: true,
+                          animateFromLastPercent: true,
+                          animationDuration: 2500,
+                          progressColor: getProgressColor(totalReferrals),
+                          backgroundColor: Colors.grey.shade300,
+                          barRadius: const Radius.circular(10),
                         ),
-                    ],
-                  )
-                ],
-              ),
-              const SizedBox(height: 30),
-
-              // Progress bar
-              LinearPercentIndicator(
-                lineHeight: 20.0,
-                percent: (totalReferrals / referralGoal).clamp(0.0, 1.0),
-                center: Text(
-                  totalReferrals >= referralGoal
-                      ? "Completed"
-                      : "$totalReferrals / $referralGoal",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                animation: true,
-                animateFromLastPercent: true,
-                animationDuration: 2500,
-                progressColor: getProgressColor(totalReferrals),
-                backgroundColor: Colors.grey.shade300,
-                barRadius: const Radius.circular(10),
-              ),
-
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Total Referrals: $totalReferrals",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF104038),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            "Total Referrals: $totalReferrals",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
 
-              // View full details button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF104038),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 30),
+
+                // View full details button
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF104038),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
                   ),
-                  elevation: 4,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AnnouncementsPage(student_id: widget.student_id),
+                      ),
+                    );
+                  },
+                  child: const Text("View Announcements",
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
-                onPressed: () {
-                  // handle navigation
-                },
-                child: const Text("View the full Details",
-                    style: TextStyle(color: Colors.white)),
-              ),
 
-              const SizedBox(height: 20),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

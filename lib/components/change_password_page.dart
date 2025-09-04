@@ -130,131 +130,150 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         _hasNumber && _hasLetter && _hasSymbol && _hasUpperAndLower;
 
     return Scaffold(
-        appBar: AppBar(
-            title: const Text("Change Password"),
-            backgroundColor: Colors.green),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Create New Password",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // New Password
-                    TextFormField(
-                      controller: _newPasswordController,
-                      obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: "New Password",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+          child: AppBar(
+            backgroundColor:
+                Colors.transparent, // Make the AppBar background transparent
+            elevation: 0, // Remove the shadow of the AppBar
+            flexibleSpace: Image.asset(
+              'assets/images/coc_logo.png', // Path to your background image
+              height: 50,
+              width: 50, // Ensure the image covers the entire area
+            ),
+          ),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade50, Colors.green.shade200],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Create New Password",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                        suffixIcon: IconButton(
-                          icon: Icon(_isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
-                        ),
-                        errorText:
-                            _isPasswordValid ? null : "Password is required",
                       ),
-                      onChanged: (value) => _validatePassword(),
-                    ),
+                      const SizedBox(height: 20),
 
-                    const SizedBox(height: 15),
-
-                    // Confirm Password
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: !_isConfirmPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: "Confirm Password",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(_isConfirmPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _isConfirmPasswordVisible =
-                                  !_isConfirmPasswordVisible;
-                            });
-                          },
-                        ),
-                        errorText: _isConfirmPasswordValid
-                            ? null
-                            : "Confirm Password is required",
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // Password validation criteria
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildValidationItem(
-                              "At least one number", _hasNumber),
-                          _buildValidationItem(
-                              "At least one letter", _hasLetter),
-                          _buildValidationItem(
-                              "At least one symbol", _hasSymbol),
-                          _buildValidationItem(
-                              "Both uppercase and lowercase letters",
-                              _hasUpperAndLower),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Submit button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed:
-                            isPasswordValidToSubmit ? _changePassword : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isPasswordValidToSubmit
-                              ? Colors.green
-                              : Colors.grey,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
+                      // New Password
+                      TextFormField(
+                        controller: _newPasswordController,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: "New Password",
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          suffixIcon: IconButton(
+                            icon: Icon(_isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                          errorText:
+                              _isPasswordValid ? null : "Password is required",
                         ),
-                        child: const Text(
-                          "Change Password",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                        onChanged: (value) => _validatePassword(),
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      // Confirm Password
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: !_isConfirmPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: "Confirm Password",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(_isConfirmPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () {
+                              setState(() {
+                                _isConfirmPasswordVisible =
+                                    !_isConfirmPasswordVisible;
+                              });
+                            },
+                          ),
+                          errorText: _isConfirmPasswordValid
+                              ? null
+                              : "Confirm Password is required",
                         ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 15),
+
+                      // Password validation criteria
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildValidationItem(
+                                "At least one number", _hasNumber),
+                            _buildValidationItem(
+                                "At least one letter", _hasLetter),
+                            _buildValidationItem(
+                                "At least one symbol", _hasSymbol),
+                            _buildValidationItem(
+                                "Both uppercase and lowercase letters",
+                                _hasUpperAndLower),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Submit button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed:
+                              isPasswordValidToSubmit ? _changePassword : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isPasswordValidToSubmit
+                                ? Colors.green
+                                : Colors.grey,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            "Change Password",
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

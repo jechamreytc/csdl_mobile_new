@@ -17,6 +17,7 @@ import 'dart:io';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'package:csdl_mobile/student/student.dart';
+import 'package:csdl_mobile/student/student_announcement.dart';
 import 'dart:html' as html;
 
 class StudentDashboard extends StatefulWidget {
@@ -67,252 +68,290 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: ListView(
-            children: [
-              const SizedBox(height: 10),
-              const Text(
-                "DASHBOARD",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF104038),
-                  fontSize: 40,
-                ),
-              ),
-              const SizedBox(height: 20),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ListView(
+              children: [
+                const SizedBox(height: 20),
+                // const Text(
+                //   "DASHBOARD",
+                //   textAlign: TextAlign.center,
+                //   style: TextStyle(
+                //     fontWeight: FontWeight.bold,
+                //     color: Color(0xFF104038),
+                //     fontSize: 32,
+                //     letterSpacing: 1.5,
+                //   ),
+                // ),
+                // const SizedBox(height: 20),
 
-              // Profile row
-              Row(
-                children: [
-                  // Profile image
-                  // const CircleAvatar(
-                  //   radius: 30,
-                  //   backgroundImage:
-                  //       AssetImage('assets/images/csdl_background.jpg'),
-                  // ),
-                  // const SizedBox(
-                  //   width: 40,
-                  // ),
-
-                  // Name & ID with green pills
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 30, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF104038),
+                // Profile Card
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Color(0xFF104038),
+                          child:
+                              Icon(Icons.person, size: 30, color: Colors.white),
                         ),
-                        child: Text(
-                          "NAME : $studentFullName",
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        "ID:    ${widget.student_id}",
-                        style: TextStyle(
-                          color: Color(0xFF104038),
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      if (warningText.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 3, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: warningColor,
-                            borderRadius: BorderRadius.circular(8),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                studentFullName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF104038),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "ID: ${widget.student_id}",
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              if (warningText.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: warningColor.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: warningColor, width: 1),
+                                  ),
+                                  child: Text(
+                                    warningText,
+                                    style: TextStyle(
+                                      color: warningColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          child: Text(
-                            warningText,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Progress bar Card
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Duty Hours Progress",
+                          style: TextStyle(
+                            color: Color(0xFF104038),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        LinearPercentIndicator(
+                          lineHeight: 22.0,
+                          percent: percent.clamp(0.0, 1.0),
+                          center: Text(
+                            '${(percent * 100).toStringAsFixed(0)}%',
                             style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          animation: true,
+                          animateFromLastPercent: true,
+                          animationDuration: 2500,
+                          progressColor: const Color(0xFF104038),
+                          backgroundColor: Colors.grey.shade300,
+                          barRadius: const Radius.circular(12),
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            "${renderedHours.toStringAsFixed(1)} / ${totalDutyHours.toStringAsFixed(1)} hours",
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // View full details button
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF104038),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AnnouncementsPage(student_id: widget.student_id),
+                      ),
+                    );
+                  },
+                  child: const Text("View Announcements",
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+
+                const SizedBox(height: 30),
+
+                // QR Code Card
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  color: Color(0xFF104038),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: RepaintBoundary(
+                            key: globalKey,
+                            child: QrImageView(
+                              data: studentIdNumber.isNotEmpty
+                                  ? studentIdNumber
+                                  : "No ID",
+                              version: QrVersions.auto,
+                              size: 175.0,
+                              backgroundColor: Colors.white,
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              try {
+                                RenderRepaintBoundary boundary =
+                                    globalKey.currentContext!.findRenderObject()
+                                        as RenderRepaintBoundary;
+                                ui.Image image =
+                                    await boundary.toImage(pixelRatio: 3.0);
+                                ByteData? byteData = await image.toByteData(
+                                    format: ui.ImageByteFormat.png);
+                                Uint8List pngBytes =
+                                    byteData!.buffer.asUint8List();
 
-                      // Container(
-                      //   padding: const EdgeInsets.symmetric(
-                      //       horizontal: 30, vertical: 4),
-                      //   decoration: BoxDecoration(
-                      //     color: Color(0xFF104038),
-                      //   ),
-                      //   child: const Text(
-                      //     "ID:    02-2223-008904",
-                      //     style: TextStyle(color: Colors.white, fontSize: 12),
-                      //   ),
-                      // ),
-                    ],
-                  )
-                ],
-              ),
-              const SizedBox(height: 30),
+                                if (kIsWeb) {
+                                  // WEB: Download using anchor element
+                                  final base64Data = base64Encode(pngBytes);
+                                  final anchor = html.AnchorElement(
+                                    href: 'data:image/png;base64,$base64Data',
+                                  )
+                                    ..download =
+                                        'student_qr_${DateTime.now().millisecondsSinceEpoch}.png'
+                                    ..target = 'blank';
+                                  html.document.body!.append(anchor);
+                                  anchor.click();
+                                  anchor.remove();
 
-              // Progress bar
-              LinearPercentIndicator(
-                lineHeight: 20.0,
-                percent: percent.clamp(0.0, 1.0),
-                center: Text(
-                  '${(percent * 100).toStringAsFixed(0)}%',
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                animation: true,
-                animateFromLastPercent: true,
-                animationDuration: 2500,
-                progressColor: const Color(0xFF104038),
-                backgroundColor: Colors.grey.shade300,
-                barRadius: const Radius.circular(10),
-              ),
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text("QR Code downloaded on web.")),
+                                  );
+                                } else {
+                                  // MOBILE/APP: Request permission and save
+                                  final status =
+                                      await Permission.storage.request();
+                                  if (status.isGranted) {
+                                    final directory =
+                                        await getExternalStorageDirectory();
+                                    final path = directory!.path;
+                                    final file = File(
+                                        '$path/student_qr_${DateTime.now().millisecondsSinceEpoch}.png');
+                                    await file.writeAsBytes(pngBytes);
 
-              const SizedBox(height: 8),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Duty Hours",
-                  style: TextStyle(color: Colors.black54),
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // View full details button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF104038),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 4,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          Student(student_id: widget.student_id),
-                    ),
-                  );
-                },
-                child: const Text("View the full Details",
-                    style: TextStyle(color: Colors.white)),
-              ),
-
-              const SizedBox(height: 30),
-
-              // QR Code with RepaintBoundary
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFF104038),
-                  ),
-                  child: Card(
-                    color: const Color.fromARGB(255, 242, 245, 242),
-                    elevation: 5,
-                    shadowColor: Colors.blueAccent,
-                    child: Padding(
-                      padding: const EdgeInsets.all(13),
-                      child: RepaintBoundary(
-                        key: globalKey,
-                        child: QrImageView(
-                          data: studentIdNumber.isNotEmpty
-                              ? studentIdNumber
-                              : "No ID",
-                          version: QrVersions.auto,
-                          size: 175.0,
-                          backgroundColor: Colors.white,
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              "QR Code saved successfully!")),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              "Storage permission denied.")),
+                                    );
+                                  }
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text("Error saving QR: $e")),
+                                );
+                              }
+                            },
+                            icon:
+                                const Icon(Icons.download, color: Colors.white),
+                            label: const Text(
+                              "Download QR Code",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF104038),
+                              side: const BorderSide(color: Color(0xFF104038)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Download Button
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    try {
-                      RenderRepaintBoundary boundary = globalKey.currentContext!
-                          .findRenderObject() as RenderRepaintBoundary;
-                      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-                      ByteData? byteData = await image.toByteData(
-                          format: ui.ImageByteFormat.png);
-                      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-                      if (kIsWeb) {
-                        // WEB: Download using anchor element
-                        final base64Data = base64Encode(pngBytes);
-                        final anchor = html.AnchorElement(
-                          href: 'data:image/png;base64,$base64Data',
-                        )
-                          ..download =
-                              'student_qr_${DateTime.now().millisecondsSinceEpoch}.png'
-                          ..target = 'blank';
-                        html.document.body!.append(anchor);
-                        anchor.click();
-                        anchor.remove();
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text("QR Code downloaded on web.")),
-                        );
-                      } else {
-                        // MOBILE/APP: Request permission and save
-                        final status = await Permission.storage.request();
-                        if (status.isGranted) {
-                          final directory = await getExternalStorageDirectory();
-                          final path = directory!.path;
-                          final file = File(
-                              '$path/student_qr_${DateTime.now().millisecondsSinceEpoch}.png');
-                          await file.writeAsBytes(pngBytes);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("QR Code saved successfully!")),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Storage permission denied.")),
-                          );
-                        }
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Error saving QR: $e")),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.download, color: Colors.white),
-                  label: const Text(
-                    "Download QR Code",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF104038),
-                    side: const BorderSide(color: Color(0xFF104038)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-            ],
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),

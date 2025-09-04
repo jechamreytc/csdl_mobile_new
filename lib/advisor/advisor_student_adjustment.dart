@@ -142,110 +142,133 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Deduct Scholar Time"),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+        child: AppBar(
+          backgroundColor:
+              Colors.transparent, // Make the AppBar background transparent
+          elevation: 0, // Remove the shadow of the AppBar
+          flexibleSpace: Image.asset(
+            'assets/images/coc_logo.png', // Path to your background image
+            height: 50,
+            width: 50, // Ensure the image covers the entire area
+          ),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            const Text("Student ID"),
-            TextField(
-              controller: _studentIdController,
-              decoration: const InputDecoration(
-                hintText: "Enter Scholar's Assign ID",
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: openScanner,
-              icon: const Icon(Icons.qr_code_scanner),
-              label: const Text("Scan QR for ID"),
-            ),
-            const SizedBox(height: 16),
-            const Text("Reason for Deduction"),
-            TextField(
-              controller: _reasonController,
-              decoration: const InputDecoration(
-                hintText: "e.g. Late sign-in, absent",
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text("Deduct Hours"),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _hoursInputController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Hours",
-                      hintText: "0 or 1 only",
-                    ),
-                    onChanged: (value) {
-                      if (value.isNotEmpty && value != '0' && value != '1') {
-                        _hoursInputController.text = '';
-                      }
-                    },
-                  ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            children: [
+              const Text("Student ID"),
+              TextField(
+                controller: _studentIdController,
+                decoration: const InputDecoration(
+                  hintText: "Enter Scholar's Assign ID",
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _minutesInputController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Minutes",
-                      hintText: "0 to 59 only",
-                    ),
-                    onChanged: (value) {
-                      if (value.isNotEmpty) {
-                        final numValue = int.tryParse(value);
-                        if (numValue == null || numValue < 0 || numValue > 59) {
-                          _minutesInputController.text = '';
+              ),
+              ElevatedButton.icon(
+                onPressed: openScanner,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text("Scan QR for ID"),
+              ),
+              const SizedBox(height: 16),
+              const Text("Reason for Adjustment"),
+              TextField(
+                controller: _reasonController,
+                decoration: const InputDecoration(
+                  hintText: "e.g. Late sign-in, Special Duty, Etc.",
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text("Add Hours"),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _hoursInputController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Hours",
+                        hintText: "0 or 1 only",
+                      ),
+                      onChanged: (value) {
+                        if (value.isNotEmpty && value != '0' && value != '1') {
+                          _hoursInputController.text = '';
                         }
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text("Exact Day to Adjust"),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _selectedDate != null
-                        ? DateFormat("yyyy-MM-dd").format(_selectedDate!)
-                        : "No date selected",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _selectedDate != null ? Colors.black : Colors.grey,
+                      },
                     ),
                   ),
-                ),
-                TextButton(
-                  onPressed: _pickDate,
-                  child: const Text("Pick Date"),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton.icon(
-                    onPressed: submitAdjustment,
-                    icon: const Icon(Icons.remove_circle_outline),
-                    label: const Text("Deduct Time"),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _minutesInputController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Minutes",
+                        hintText: "0 to 59 only",
+                      ),
+                      onChanged: (value) {
+                        if (value.isNotEmpty) {
+                          final numValue = int.tryParse(value);
+                          if (numValue == null ||
+                              numValue < 0 ||
+                              numValue > 59) {
+                            _minutesInputController.text = '';
+                          }
+                        }
+                      },
+                    ),
                   ),
-            const SizedBox(height: 16),
-            Text(
-              _message,
-              style: TextStyle(
-                color: _message.contains("success") ? Colors.green : Colors.red,
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              const Text("Exact Day to Adjust"),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _selectedDate != null
+                          ? DateFormat("yyyy-MM-dd").format(_selectedDate!)
+                          : "No date selected",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color:
+                            _selectedDate != null ? Colors.black : Colors.grey,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _pickDate,
+                    child: const Text("Pick Date"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton.icon(
+                      onPressed: submitAdjustment,
+                      icon: const Icon(Icons.remove_circle_outline),
+                      label: const Text("Add Time"),
+                    ),
+              const SizedBox(height: 16),
+              Text(
+                _message,
+                style: TextStyle(
+                  color:
+                      _message.contains("success") ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

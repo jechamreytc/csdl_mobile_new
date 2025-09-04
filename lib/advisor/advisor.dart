@@ -40,11 +40,20 @@ class _AdvisorState extends State<Advisor> {
         drawer: AdvisorDrawer(
           advisorId: widget.advisor_id,
         ),
-        body: const Center(
-          child: Column(
-            children: [
-              Text('Advisor'),
-            ],
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade50, Colors.green.shade200],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: const Center(
+            child: Column(
+              children: [
+                Text('Advisor'),
+              ],
+            ),
           ),
         ),
       ),
