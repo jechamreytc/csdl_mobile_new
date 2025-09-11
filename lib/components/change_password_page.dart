@@ -84,6 +84,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             _newPasswordController.text
       };
 
+      print(widget.isAdvisor ? "supM_id" : "stud_id");
+      print(widget.isAdvisor ? "supM_password" : "stud_password");
+      print(_newPasswordController.text);
+
       Map<String, String> requestBody = {
         "operation": "updatePassword",
         "json": jsonEncode(jsonData),
@@ -91,24 +95,37 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       var response = await http.post(url, body: requestBody);
 
-      if (response.statusCode == 200) {
-        var res = jsonDecode(response.body);
-        if (res == 1) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    "Password changed successfully! Please log in again.")),
-          );
+      print("API Raw Response: ${response.body}");
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => HomePage()), // Redirect to login page
-          );
-        } else {
+      if (response.statusCode == 200) {
+        try {
+          var res = jsonDecode(response.body);
+
+          print("API Decoded Response: $res");
+
+          if (res["success"] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content:
+                      Text(res["message"] ?? "Password changed successfully!")),
+            );
+
+            // Redirect back to login/home
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(res["message"] ?? "Password update failed.")),
+            );
+          }
+        } catch (e) {
+          print("Failed to decode JSON: $e");
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text("Failed to change password. Please try again.")),
+            SnackBar(
+                content: Text("Invalid server response: ${response.body}")),
           );
         }
       } else {

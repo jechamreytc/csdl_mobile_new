@@ -12,7 +12,7 @@ class EntryPoint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final studentId = SessionStorage.getItem("student_id");
-    final advisorId = SessionStorage.getItem("advisor_id");
+    final advisorId = SessionStorage.getItem("advisor_email");
     final adminId = SessionStorage.getItem("admin_email");
     final isFresh = SessionStorage.getItem("is_fresh");
 

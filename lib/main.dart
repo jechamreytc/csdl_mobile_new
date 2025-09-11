@@ -173,7 +173,6 @@ class _HomePageState extends State<HomePage> {
     return true;
   }
 
-
   void login() async {
     if (_isLocked) return;
 
@@ -348,7 +347,8 @@ class _HomePageState extends State<HomePage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (context) => Advisor(advisor_id: advisorEmail)),
+                  builder: (context) =>
+                      AdvisorScholarList(advisor_id: advisorEmail)),
             );
           }
         }
