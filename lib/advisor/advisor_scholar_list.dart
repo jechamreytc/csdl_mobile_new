@@ -52,40 +52,40 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
       ),
       drawer: AdvisorDrawer(advisorId: widget.advisor_id),
       body: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.green.shade50, Colors.green.shade200],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Stack(
           children: [
-            Image.asset(
-              'assets/images/csdl_background.jpg',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              alignment: Alignment.topLeft,
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color.fromRGBO(
-                        255, 255, 255, 0.9), // White with 50% transparency
-                    Color.fromRGBO(
-                        255, 255, 255, 0.9), // White with 50% transparency
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
+            // Image.asset(
+            //   'assets/images/csdl_background.jpg',
+            //   fit: BoxFit.cover,
+            //   width: double.infinity,
+            //   height: double.infinity,
+            //   alignment: Alignment.topLeft,
+            // ),
+            // Container(
+            //   decoration: const BoxDecoration(
+            //     gradient: LinearGradient(
+            //       colors: [
+            //         Color.fromRGBO(
+            //             255, 255, 255, 0.9), // White with 50% transparency
+            //         Color.fromRGBO(
+            //             255, 255, 255, 0.9), // White with 50% transparency
+            //       ],
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //     ),
+            //   ),
+            // ),
             Center(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 40.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -99,7 +99,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                       ),
                     ),
                     const SizedBox(height: 20),
-        
+
                     // Separate header pills
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,9 +137,9 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                         ),
                       ],
                     ),
-        
+
                     const SizedBox(height: 20),
-        
+
                     // Scholar list below header pills
                     Container(
                       width: double.infinity,
@@ -163,7 +163,8 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                       decoration: BoxDecoration(
                                         border: Border(
                                           bottom: BorderSide(
-                                            color: Colors.white.withOpacity(0.2),
+                                            color:
+                                                Colors.white.withOpacity(0.2),
                                           ),
                                         ),
                                       ),
@@ -198,31 +199,38 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                       children: [
                                                         Text(
                                                           "Section: ${scholar['sub_code'] ?? 'N/A'}",
-                                                          style: const TextStyle(
+                                                          style:
+                                                              const TextStyle(
                                                             color: Colors.white,
                                                             fontSize: 14,
                                                           ),
                                                         ),
-                                                        const SizedBox(height: 8),
+                                                        const SizedBox(
+                                                            height: 8),
                                                         Text(
                                                           "Contact: ${scholar['stud_contactNumber'] ?? 'N/A'}",
-                                                          style: const TextStyle(
+                                                          style:
+                                                              const TextStyle(
                                                             color: Colors.white,
                                                             fontSize: 14,
                                                           ),
                                                         ),
-                                                        const SizedBox(height: 4),
+                                                        const SizedBox(
+                                                            height: 4),
                                                         Text(
                                                           "Email: ${scholar['stud_email'] ?? 'N/A'}",
-                                                          style: const TextStyle(
+                                                          style:
+                                                              const TextStyle(
                                                             color: Colors.white,
                                                             fontSize: 14,
                                                           ),
                                                         ),
-                                                        const SizedBox(height: 4),
+                                                        const SizedBox(
+                                                            height: 4),
                                                         Text(
                                                           "Room: ${scholar['sub_room'] ?? 'N/A'}",
-                                                          style: const TextStyle(
+                                                          style:
+                                                              const TextStyle(
                                                             color: Colors.white,
                                                             fontSize: 14,
                                                           ),
@@ -266,7 +274,8 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                     final assignment = scholar[
                                                             'assignment_name'] ??
                                                         '';
-                                                    if (assignment == "Office") {
+                                                    if (assignment ==
+                                                        "Office") {
                                                       // Uncomment when ready
                                                       Navigator.push(
                                                         context,
@@ -277,8 +286,8 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                               //       'stud_id'],
                                                               // ),
                                                               AdvisorEvaluationOffice(
-                                                            advisor_id:
-                                                                widget.advisor_id,
+                                                            advisor_id: widget
+                                                                .advisor_id,
                                                             scholar_id: scholar[
                                                                 'stud_active_id'],
                                                           ),
@@ -296,8 +305,8 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                               //       'stud_id'],
                                                               // ),
                                                               AdvisorEvaluation(
-                                                            advisor_id:
-                                                                widget.advisor_id,
+                                                            advisor_id: widget
+                                                                .advisor_id,
                                                             scholar_id: scholar[
                                                                 'stud_active_id'],
                                                           ),
@@ -322,9 +331,11 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                       ? Colors.white
                                                       : Colors.white
                                                           .withOpacity(0.5),
-                                              foregroundColor: Colors.green[900],
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 10),
+                                              foregroundColor:
+                                                  Colors.green[900],
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10),
                                             ),
                                             child: const Text("Evaluate"),
                                           ),

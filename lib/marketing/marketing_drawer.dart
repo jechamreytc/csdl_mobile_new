@@ -115,75 +115,91 @@ class _MarketingDrawerState extends State<MarketingDrawer> {
             },
           ),
 
-          // Settings & Privacy (expandable)
-          // Settings & Privacy (expandable)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: selectedIndex == 10
-                  ? const Color(0xFF104038)
-                  : Colors.transparent,
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.settings, color: Colors.white),
-              title: const Text("Settings & Privacy",
-                  style: TextStyle(color: Colors.white)),
-              trailing: Icon(
-                settingsExpanded
-                    ? Icons.keyboard_arrow_up
-                    : Icons.keyboard_arrow_down,
-                color: Colors.white,
-              ),
-              onTap: () {
-                setState(() {
-                  settingsExpanded = !settingsExpanded;
-                  selectedIndex = 10; // mark settings as selected
-                });
-              },
-            ),
+          buildDrawerItem(
+            index: 1,
+            icon: Icons.leaderboard,
+            label: "Settings and Privacy",
+            onTap: () {
+              setState(() => selectedIndex = 1);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MarketingEditProfile(
+                          adminEmail: widget.adminEmail,
+                        )),
+              );
+            },
           ),
 
-// Sub-menu Personal Details
-          if (settingsExpanded) ...[
-            Padding(
-              padding: const EdgeInsets.only(left: 30.0),
-              child: buildDrawerItem(
-                index: 21,
-                icon: Icons.person,
-                label: "Personal Details",
-                onTap: () {
-                  setState(() => selectedIndex = 21); // Set selected here
-                  Navigator.pop(context);
-                  showShadSheet(
-                    side: ShadSheetSide.right,
-                    context: context,
-                    builder: (context) => MarketingEditProfile(
-                      adminEmail: widget.adminEmail,
-                    ),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 30.0),
-              child: buildDrawerItem(
-                index: 22,
-                icon: Icons.lock,
-                label: "Password & Security",
-                onTap: () {
-                  setState(() => selectedIndex = 22); // Set selected here
-                  Navigator.pop(context);
-                  showShadSheet(
-                    side: ShadSheetSide.right,
-                    context: context,
-                    builder: (context) => MarketingEditProfile(
-                      adminEmail: widget.adminEmail,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          // Settings & Privacy (expandable)
+          // Settings & Privacy (expandable)
+//           Container(
+//             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//             decoration: BoxDecoration(
+//               color: selectedIndex == 10
+//                   ? const Color(0xFF104038)
+//                   : Colors.transparent,
+//             ),
+//             child: ListTile(
+//               leading: const Icon(Icons.settings, color: Colors.white),
+//               title: const Text("Settings & Privacy",
+//                   style: TextStyle(color: Colors.white)),
+//               trailing: Icon(
+//                 settingsExpanded
+//                     ? Icons.keyboard_arrow_up
+//                     : Icons.keyboard_arrow_down,
+//                 color: Colors.white,
+//               ),
+//               onTap: () {
+//                 setState(() {
+//                   settingsExpanded = !settingsExpanded;
+//                   selectedIndex = 10; // mark settings as selected
+//                 });
+//               },
+//             ),
+//           ),
+
+// // Sub-menu Personal Details
+//           if (settingsExpanded) ...[
+//             Padding(
+//               padding: const EdgeInsets.only(left: 30.0),
+//               child: buildDrawerItem(
+//                 index: 21,
+//                 icon: Icons.person,
+//                 label: "Personal Details",
+//                 onTap: () {
+//                   setState(() => selectedIndex = 21); // Set selected here
+//                   Navigator.pop(context);
+//                   showShadSheet(
+//                     side: ShadSheetSide.right,
+//                     context: context,
+//                     builder: (context) => MarketingEditProfile(
+//                       adminEmail: widget.adminEmail,
+//                     ),
+//                   );
+//                 },
+//               ),
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.only(left: 30.0),
+//               child: buildDrawerItem(
+//                 index: 22,
+//                 icon: Icons.lock,
+//                 label: "Password & Security",
+//                 onTap: () {
+//                   setState(() => selectedIndex = 22); // Set selected here
+//                   Navigator.pop(context);
+//                   showShadSheet(
+//                     side: ShadSheetSide.right,
+//                     context: context,
+//                     builder: (context) => MarketingEditProfile(
+//                       adminEmail: widget.adminEmail,
+//                     ),
+//                   );
+//                 },
+//               ),
+//             ),
+//           ],
 
 // Logout
           buildDrawerItem(

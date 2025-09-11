@@ -1,9 +1,8 @@
+import 'dart:convert';
 import 'package:csdl_mobile/advisor/advisor_drawer.dart';
-import 'package:csdl_mobile/advisor/advisor_edit_profile.dart';
-import 'package:csdl_mobile/advisor/advisor_qr_scanner.dart';
-import 'package:csdl_mobile/advisor/advisor_scholar_list.dart';
 import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:http/http.dart' as http;
+import 'package:csdl_mobile/session_storage.dart';
 
 class Advisor extends StatefulWidget {
   final String advisor_id;
@@ -17,7 +16,91 @@ class Advisor extends StatefulWidget {
 }
 
 class _AdvisorState extends State<Advisor> {
-  String? selectedOption;
+  List<dynamic> _subjects = [];
+  List<dynamic> _scholars = [];
+  String _advisorName = "";
+  String _advisorEmail = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSupervisorProfile();
+    _fetchSubjects();
+    _fetchScholars();
+  }
+
+  Future<void> _fetchSupervisorProfile() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+
+      Map<String, dynamic> payload;
+
+      // If it's a number, send as supM_id, otherwise treat it as email
+      if (int.tryParse(widget.advisor_id) != null) {
+        payload = {"supM_id": widget.advisor_id};
+      } else {
+        payload = {"supM_email": widget.advisor_id};
+      }
+
+      var response = await http.post(url, body: {
+        "operation": "getSupervisorProfile",
+        "json": jsonEncode(payload),
+      });
+
+      var res = jsonDecode(response.body);
+      print("Raw response: ${response.body}");
+      print("Decoded response: $res");
+
+      if (res["success"] == true && res["data"] != null) {
+        var data = res["data"];
+        setState(() {
+          _advisorName = data["supM_name"] ?? "Unknown";
+          _advisorEmail = data["supM_email"] ?? "No email";
+        });
+      } else {
+        setState(() {
+          _advisorName = "Unknown";
+          _advisorEmail = "No email";
+        });
+      }
+    } catch (e) {
+      print("Error fetching supervisor profile: $e");
+    }
+  }
+
+  Future<void> _fetchSubjects() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(url, body: {
+        "operation": "getAdvisorSubjects",
+        "json": jsonEncode({"supM_id": widget.advisor_id}),
+      });
+      var res = jsonDecode(response.body);
+
+      if (res != 0 && res is List) {
+        setState(() => _subjects = res);
+      }
+    } catch (e) {
+      print("Error fetching subjects: $e");
+    }
+  }
+
+  Future<void> _fetchScholars() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(url, body: {
+        "operation": "getAdvisorScholars",
+        "json": jsonEncode({"supM_id": widget.advisor_id}),
+      });
+      var res = jsonDecode(response.body);
+
+      if (res != 0 && res is List) {
+        setState(() => _scholars = res);
+      }
+    } catch (e) {
+      print("Error fetching scholars: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +108,14 @@ class _AdvisorState extends State<Advisor> {
       child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(50), // Set the height of the AppBar
+          preferredSize: const Size.fromHeight(50),
           child: AppBar(
-            backgroundColor:
-                Colors.transparent, // Make the AppBar background transparent
-            elevation: 0, // Remove the shadow of the AppBar
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             flexibleSpace: Image.asset(
-              'assets/images/coc_logo.png', // Path to your background image
+              'assets/images/coc_logo.png',
               height: 50,
-              width: 50, // Ensure the image covers the entire area
+              width: 50,
             ),
           ),
         ),
@@ -48,240 +130,154 @@ class _AdvisorState extends State<Advisor> {
               end: Alignment.bottomCenter,
             ),
           ),
-          child: const Center(
-            child: Column(
-              children: [
-                Text('Advisor'),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // const Text(
+              //   "Welcome",
+              //   style: TextStyle(
+              //     fontSize: 20,
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.green,
+              //   ),
+              // ),
+              const SizedBox(height: 8),
 
-  Widget advisorDrawer(BuildContext context) {
-    return Drawer(
-      width: 250,
-      backgroundColor: Colors.green[700],
-      child: SizedBox(
-        width: 200,
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.green.shade700,
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    top: 10,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: AssetImage(
-                                  'assets/images/csdl_background_no_bg.jpg'),
-                              fit: BoxFit.cover,
+              // ✅ Supervisor Info Card
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Color(0xFF104038),
+                        child:
+                            Icon(Icons.person, size: 30, color: Colors.white),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "$_advisorName",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 80,
-                    top: 10,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "HK SMS",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 4),
+                          Text(
+                            "$_advisorEmail",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
                           ),
-                        ),
-                        Text(
-                          "HK Scholars",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          "Management System",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    top: 100 + 20,
-                    child: Text(
-                      "ACCOUNT",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.list,
-                color: Colors.white,
-              ),
-              title: const Text("Assigned Scholar",
-                  style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdvisorScholarList(
-                      advisor_id: widget.advisor_id,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.checklist,
-                color: Colors.white,
-              ),
-              title: const Text("Evaluation",
-                  style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdvisorScholarList(
-                      advisor_id: widget.advisor_id,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.qr_code_scanner,
-                color: Colors.white,
-              ),
-              title: const Text(
-                "QR Scanner",
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdvisorQrScanner(
-                      advisor_id: widget.advisor_id,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.settings,
-                color: Colors.white,
-              ),
-              title: const Text("Account Settings",
-                  style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                showShadSheet(
-                  side: ShadSheetSide.right,
-                  context: context,
-                  builder: (context) => AdvisorEditProfileSheet(
-                    side: ShadSheetSide.right,
-                    advisor_id: widget.advisor_id,
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.logout,
-                color: Colors.white,
-              ),
-              title: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/home');
-              },
-            ),
-            // ListTile(
-            //   leading: const Icon(
-            //     Icons.qr_code_scanner,
-            //     color: Colors.white,
-            //   ),
-            //   title: DropdownButton<String>(
-            //     value: selectedOption,
-            //     dropdownColor: const Color.fromARGB(255, 9, 99, 58),
-            //     items: [
-            //       DropdownMenuItem(
-            //         value: 'regular',
-            //         child: const Text(
-            //           'Regular',
-            //           style: TextStyle(color: Colors.white),
-            //         ),
-            //       ),
-            //       DropdownMenuItem(
-            //         value: 'adjustment',
-            //         child: const Text(
-            //           'Adjustment',
-            //           style: TextStyle(color: Colors.white),
-            //         ),
-            //       ),
-            //     ],
-            //     onChanged: (value) {
-            //       setState(() {
-            //         selectedOption = value;
-            //       });
 
-            //       if (value == 'regular') {
-            //         Navigator.push(
-            //           context,
-            //           MaterialPageRoute(
-            //             builder: (context) => const AdvisorQrScanner(),
-            //           ),
-            //         );
-            //       } else if (value == 'adjustment') {
-            //         Navigator.push(
-            //           context,
-            //           MaterialPageRoute(
-            //             builder: (context) =>
-            //                 const AdvisorQrScanner(), // Replace with Adjustment Page if needed
-            //           ),
-            //         );
-            //       }
-            //     },
-            //     hint: const Text(
-            //       "QR Scanner",
-            //       style: TextStyle(color: Colors.white),
-            //     ),
-            //     underline: Container(),
-            //   ),
-            // ),
-          ],
+              const SizedBox(height: 16),
+
+              // Subjects Section
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Subjects",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const Divider(),
+                      _subjects.isEmpty
+                          ? const Text("No subjects found.")
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _subjects.length,
+                              itemBuilder: (context, index) {
+                                var subj = _subjects[index];
+                                return ListTile(
+                                  leading: const Icon(Icons.book,
+                                      color: Colors.blue),
+                                  title: Text(subj["subject_name"] ??
+                                      "Unknown Subject"),
+                                  subtitle: Text(
+                                      "Code: ${subj["subject_code"] ?? 'N/A'}"),
+                                );
+                              },
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Scholars Section
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Assigned Scholars",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const Divider(),
+                      _scholars.isEmpty
+                          ? const Text("No scholars found.")
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _scholars.length,
+                              itemBuilder: (context, index) {
+                                var scholar = _scholars[index];
+                                return ListTile(
+                                  leading: const Icon(Icons.person,
+                                      color: Colors.green),
+                                  title: Text(scholar["stud_name"] ??
+                                      "Unknown Scholar"),
+                                  subtitle: Text(
+                                      "Course: ${scholar["course"] ?? 'N/A'}"),
+                                );
+                              },
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

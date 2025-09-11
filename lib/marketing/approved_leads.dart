@@ -252,45 +252,57 @@ class _ApprovedLeadsPageState extends State<ApprovedLeadsPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : approvedLeads.isEmpty
-              ? const Center(child: Text("No approved leads found"))
-              : ListView.builder(
-                  itemCount: approvedLeads.length,
-                  itemBuilder: (context, index) {
-                    final lead = approvedLeads[index];
+              ? Container(
+                  child: const Center(child: Text("No approved leads found")))
+              : Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.green.shade50, Colors.green.shade200],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: ListView.builder(
+                    itemCount: approvedLeads.length,
+                    itemBuilder: (context, index) {
+                      final lead = approvedLeads[index];
 
-                    // Build full name consistently with Excel export
-                    final firstName =
-                        lead['freshmen_ref_firstname']?.toString().trim() ?? '';
-                    final middleName = lead['freshmen_ref_middlename']
-                            ?.toString()
-                            .trim() ??
-                        lead['freshmen_ref_middle_name']?.toString().trim() ??
-                        '';
-                    final lastName =
-                        lead['freshmen_ref_lastname']?.toString().trim() ?? '';
+                      // Build full name consistently with Excel export
+                      final firstName =
+                          lead['freshmen_ref_firstname']?.toString().trim() ??
+                              '';
+                      final middleName = lead['freshmen_ref_middlename']
+                              ?.toString()
+                              .trim() ??
+                          lead['freshmen_ref_middle_name']?.toString().trim() ??
+                          '';
+                      final lastName =
+                          lead['freshmen_ref_lastname']?.toString().trim() ??
+                              '';
 
-                    final nameParts = <String>[];
-                    if (firstName.isNotEmpty) nameParts.add(firstName);
-                    if (middleName.isNotEmpty) nameParts.add(middleName);
-                    if (lastName.isNotEmpty) nameParts.add(lastName);
+                      final nameParts = <String>[];
+                      if (firstName.isNotEmpty) nameParts.add(firstName);
+                      if (middleName.isNotEmpty) nameParts.add(middleName);
+                      if (lastName.isNotEmpty) nameParts.add(lastName);
 
-                    final fullName = nameParts.join(' ');
+                      final fullName = nameParts.join(' ');
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 6, horizontal: 10),
-                      child: ListTile(
-                        title: Text(
-                          fullName.isNotEmpty ? fullName : 'No name provided',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 10),
+                        child: ListTile(
+                          title: Text(
+                            fullName.isNotEmpty ? fullName : 'No name provided',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Email: ${lead['freshmen_ref_email_add'] ?? 'No email'}\n"
+                            "Contact: ${lead['freshmen_ref_contact_number'] ?? 'No contact'}",
+                          ),
                         ),
-                        subtitle: Text(
-                          "Email: ${lead['freshmen_ref_email_add'] ?? 'No email'}\n"
-                          "Contact: ${lead['freshmen_ref_contact_number'] ?? 'No contact'}",
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
     );
   }
