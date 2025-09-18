@@ -127,6 +127,7 @@ class _HomePageState extends State<HomePage> {
   String advisor_id = "";
   String advName = "";
   String advEmail = "";
+  String supervisor_id1 = "";
 
   @override
   void initState() {
@@ -292,13 +293,16 @@ class _HomePageState extends State<HomePage> {
       // -------------------
       else if (res.containsKey("supM_email")) {
         String advisorEmail = res['supM_email'];
+        String supervisor_id = res['supM_id'].toString();
         bool isDefaultPassword = res['is_default_password'];
 
         setState(() {
           userIsSupervisor = true;
           advName = res['supM_name'];
           emailController.text = advisorEmail;
+          supervisor_id1 = supervisor_id;
         });
+        print(supervisor_id1);
 
         if (res['supM_login_attempts'] == 1) {
           Get.snackbar(
@@ -347,8 +351,10 @@ class _HomePageState extends State<HomePage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (context) =>
-                      AdvisorScholarList(advisor_id: advisorEmail)),
+                  builder: (context) => AdvisorScholarList(
+                        advisor_id: advisorEmail,
+                        supervisor_id: supervisor_id1,
+                      )),
             );
           }
         }
@@ -556,7 +562,10 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Advisor(advisor_id: advisor_id),
+                        builder: (context) => Advisor(
+                          advisor_id: advisor_id,
+                          supervisor_id: supervisor_id1,
+                        ),
                       ),
                     );
                   } else {

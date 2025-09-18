@@ -7,8 +7,12 @@ import 'package:http/http.dart' as http;
 class AdvisorEvaluation extends StatefulWidget {
   final String advisor_id;
   final String scholar_id;
+  final String supervisor_id;
   const AdvisorEvaluation(
-      {super.key, required this.advisor_id, required this.scholar_id});
+      {super.key,
+      required this.advisor_id,
+      required this.scholar_id,
+      required this.supervisor_id});
 
   @override
   _AdvisorEvaluationState createState() => _AdvisorEvaluationState();
@@ -106,7 +110,10 @@ class _AdvisorEvaluationState extends State<AdvisorEvaluation> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      drawer: AdvisorDrawer(advisorId: widget.advisor_id),
+      drawer: AdvisorDrawer(
+        advisorId: widget.advisor_id,
+        supervisor_id: widget.supervisor_id,
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(
@@ -297,7 +304,7 @@ class _AdvisorEvaluationState extends State<AdvisorEvaluation> {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
 
       Map<String, dynamic> jsonData = {
-        "evaluation_sf_supM_id": widget.advisor_id,
+        "evaluation_sf_supM_id": widget.supervisor_id,
         "evaluation_sf_assign_stud_id": widget.scholar_id,
         "evaluation_sf_total_perfomance": totalPerformance,
         "evaluation_sf_total_general_attributes": totalGeneral,

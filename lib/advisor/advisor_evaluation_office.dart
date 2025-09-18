@@ -7,8 +7,12 @@ import 'package:http/http.dart' as http;
 class AdvisorEvaluationOffice extends StatefulWidget {
   final String advisor_id;
   final String scholar_id;
+  final String supervisor_id;
   const AdvisorEvaluationOffice(
-      {super.key, required this.advisor_id, required this.scholar_id});
+      {super.key,
+      required this.advisor_id,
+      required this.scholar_id,
+      required this.supervisor_id});
 
   @override
   _AdvisorEvaluationOfficeState createState() =>
@@ -35,7 +39,10 @@ class _AdvisorEvaluationOfficeState extends State<AdvisorEvaluationOffice> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      drawer: AdvisorDrawer(advisorId: widget.advisor_id),
+      drawer: AdvisorDrawer(
+        advisorId: widget.advisor_id,
+        supervisor_id: widget.supervisor_id,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -163,7 +170,7 @@ class _AdvisorEvaluationOfficeState extends State<AdvisorEvaluationOffice> {
 
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "evaluation_office_supM_id": widget.advisor_id,
+        "evaluation_office_supM_id": widget.supervisor_id,
         "evaluation_office_assign_stud_active_id": widget.scholar_id,
         "evaluation_office_assistant_score": totalAreas.toString(),
         "evaluation_office_assistant_strengths": "N/A",
@@ -199,11 +206,13 @@ class _AdvisorEvaluationOfficeState extends State<AdvisorEvaluationOffice> {
       };
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
+
       if (res != 0 && res is List) {
         setState(() {
           officeQuestions = res;
         });
         print(res);
+        print("akwndjaw" + widget.supervisor_id);
       }
     } catch (e) {
       print("Error getting evaluation questions: $e");

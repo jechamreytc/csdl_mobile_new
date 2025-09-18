@@ -6,9 +6,11 @@ import 'package:csdl_mobile/session_storage.dart';
 
 class Advisor extends StatefulWidget {
   final String advisor_id;
+  final String supervisor_id;
   const Advisor({
     super.key,
     required this.advisor_id,
+    required this.supervisor_id,
   });
 
   @override
@@ -121,6 +123,7 @@ class _AdvisorState extends State<Advisor> {
         ),
         drawer: AdvisorDrawer(
           advisorId: widget.advisor_id,
+          supervisor_id: widget.supervisor_id,
         ),
         body: Container(
           decoration: BoxDecoration(

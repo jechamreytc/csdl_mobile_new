@@ -9,8 +9,11 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 class AdvisorDrawer extends StatefulWidget {
   final String advisorId;
+  final String supervisor_id;
 
-  const AdvisorDrawer({Key? key, required this.advisorId}) : super(key: key);
+  const AdvisorDrawer(
+      {Key? key, required this.advisorId, required this.supervisor_id})
+      : super(key: key);
 
   @override
   _AdvisorDrawerState createState() => _AdvisorDrawerState();
@@ -89,7 +92,10 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Advisor(advisor_id: widget.advisorId),
+                  builder: (context) => Advisor(
+                    advisor_id: widget.advisorId,
+                    supervisor_id: widget.supervisor_id,
+                  ),
                 ),
               );
             },
@@ -105,8 +111,10 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      AdvisorScholarList(advisor_id: widget.advisorId),
+                  builder: (context) => AdvisorScholarList(
+                    advisor_id: widget.advisorId,
+                    supervisor_id: widget.supervisor_id,
+                  ),
                 ),
               );
             },
@@ -138,8 +146,10 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      AdvisorStudentAdjustment(advisor_id: widget.advisorId),
+                  builder: (context) => AdvisorStudentAdjustment(
+                    advisor_id: widget.advisorId,
+                    supervisor_id: widget.supervisor_id,
+                  ),
                 ),
               );
             },

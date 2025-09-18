@@ -7,9 +7,11 @@ import 'package:intl/intl.dart';
 
 class AdvisorStudentAdjustment extends StatefulWidget {
   final String advisor_id;
+  final String supervisor_id;
   const AdvisorStudentAdjustment({
     super.key,
     required this.advisor_id,
+    required this.supervisor_id,
   });
 
   @override
@@ -66,7 +68,7 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
 
       Map<String, dynamic> jsonData = {
         "adj_student_id": _studentIdController.text.trim(),
-        "adj_supervisor_id": widget.advisor_id,
+        "adj_supervisor_id": widget.supervisor_id,
         "adj_reason": _reasonController.text.trim(),
         "adj_hours": totalDeduction.toStringAsFixed(2),
         "adj_date": formattedDate,

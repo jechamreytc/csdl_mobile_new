@@ -13,9 +13,11 @@ import 'package:http/http.dart' as http;
 
 class AdvisorScholarList extends StatefulWidget {
   final String advisor_id;
+  final String supervisor_id;
   const AdvisorScholarList({
     super.key,
     required this.advisor_id,
+    required this.supervisor_id,
   });
 
   @override
@@ -50,7 +52,10 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
           ),
         ),
       ),
-      drawer: AdvisorDrawer(advisorId: widget.advisor_id),
+      drawer: AdvisorDrawer(
+        advisorId: widget.advisor_id,
+        supervisor_id: widget.supervisor_id,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -290,6 +295,8 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                                 .advisor_id,
                                                             scholar_id: scholar[
                                                                 'stud_active_id'],
+                                                            supervisor_id: widget
+                                                                .supervisor_id,
                                                           ),
                                                         ),
                                                       );
@@ -309,6 +316,8 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
                                                                 .advisor_id,
                                                             scholar_id: scholar[
                                                                 'stud_active_id'],
+                                                            supervisor_id: widget
+                                                                .supervisor_id,
                                                           ),
                                                         ),
                                                       );
@@ -368,7 +377,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "sub_supM_id": widget.advisor_id,
+        "supM_email": widget.advisor_id,
       };
 
       Map<String, String> requestBody = {
@@ -381,6 +390,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         print(res);
+        print("supervisor id ni niya" + widget.supervisor_id);
         if (res != 0) {
           setState(() {
             scholars = res;

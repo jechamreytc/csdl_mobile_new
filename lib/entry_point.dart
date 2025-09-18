@@ -23,7 +23,10 @@ class EntryPoint extends StatelessWidget {
         return StudentDashboard(student_id: studentId);
       }
     } else if (advisorId != null) {
-      return Advisor(advisor_id: advisorId);
+      return Advisor(
+        advisor_id: advisorId,
+        supervisor_id: "",
+      );
     } else if (adminId != null) {
       return MarketingDashboard(adminEmail: adminId);
     } else {
