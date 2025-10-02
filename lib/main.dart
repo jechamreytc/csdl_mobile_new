@@ -220,8 +220,8 @@ class _HomePageState extends State<HomePage> {
       var res = jsonDecode(response.body);
       print("🔵 Raw response: ${response.body}");
 
-      // Account doesn't exist
-      if (res == 0) {
+      // Account doesn't exist or invalid credentials
+      if (res == 0 || res == -1) {
         generateCaptcha();
         _usernameController.clear();
         _passwordController.clear();
@@ -229,7 +229,28 @@ class _HomePageState extends State<HomePage> {
 
         Get.snackbar(
           "Alert",
-          "Account doesn't exist",
+          "Account doesn't exist or invalid credentials",
+          backgroundColor: Colors.red,
+          snackPosition: SnackPosition.BOTTOM,
+          colorText: Colors.white,
+          icon: const Icon(Icons.warning, color: Colors.white),
+          margin: const EdgeInsets.only(top: 5),
+        );
+        return;
+      }
+
+      // Handle incorrect password responses
+      if (res is Map<String, dynamic> &&
+          res.containsKey("status") &&
+          res["status"] == 2) {
+        generateCaptcha();
+        _usernameController.clear();
+        _passwordController.clear();
+        _captchaController.clear();
+
+        Get.snackbar(
+          "Alert",
+          "Incorrect password",
           backgroundColor: Colors.red,
           snackPosition: SnackPosition.BOTTOM,
           colorText: Colors.white,
