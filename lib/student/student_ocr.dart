@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:csdl_mobile/session_storage.dart';
 
 class StudentOcr extends StatefulWidget {
   final String student_id;
@@ -793,19 +794,24 @@ class _StudentOcrState extends State<StudentOcr> {
       print("jsonData: $jsonData");
 
       try {
+        var url = Uri.parse("${SessionStorage.url}transaction.php");
         var response = await http.post(
-          Uri.parse('http://localhost/finalhk/api/transaction.php'),
+          url,
           body: {
             'json': json.encode(jsonData),
             'operation': 'addScholarSchedule',
           },
         );
 
-        String responseBody = response.body;
-        String message =
-            responseBody != "0" ? responseBody : 'Error saving data.';
+        if (response.statusCode == 200) {
+          String responseBody = response.body;
+          String message =
+              responseBody != "0" ? responseBody : 'Error saving data.';
 
-        _showResultDialog(message);
+          _showResultDialog(message);
+        } else {
+          _showResultDialog('Server error: ${response.statusCode}');
+        }
       } catch (e) {
         print('Error saving schedule data: $e');
         _showResultDialog('Network error occurred.');
