@@ -40,7 +40,7 @@ class _StudentOcrState extends State<StudentOcr> {
           ),
         ),
       ),
-      drawer: StudentDrawer(student_id: widget.student_id),
+      drawer: StudentDrawer(student_id: widget.student_id, currentIndex: 2),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -49,107 +49,473 @@ class _StudentOcrState extends State<StudentOcr> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              // Welcome Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.blue.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.blue.shade200, width: 1),
                 ),
-                icon: const Icon(Icons.assignment),
-                label: const Text("SBO/WORKING Student Portal"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          StudentJobType(student_id: widget.student_id),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue.shade700, size: 24),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Document Upload & Status",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 32),
-
-              // File upload container
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.teal.shade800, width: 2),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey.shade100,
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.picture_as_pdf,
-                          size: 48, color: Colors.teal),
-                      const SizedBox(height: 16),
-                      const Text(
-                        "Upload your Official Registration Form (ORF) here to get a HK duty",
-                        style: TextStyle(fontSize: 16),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Upload your Official Registration Form (ORF) to get your HK duty schedule. This document helps us assign you the right duty hours.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue.shade600,
+                        height: 1.4,
                       ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: _pickPDFText,
-                        child: const Text("Choose a PDF File"),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 24),
 
+              // ORF Upload Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.teal.shade50, Colors.teal.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.teal.shade300, width: 2),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.picture_as_pdf, size: 32, color: Colors.teal.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          "ORF Upload",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Upload your Official Registration Form (ORF) to get your duty schedule",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.teal.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: _pickPDFText,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.teal.shade200, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.upload_file, color: Colors.teal.shade600),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Choose PDF File",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.teal.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Supported format: PDF only",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.teal.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // Display extracted info
               if (studentNumber != null && schoolYear != null) ...[
-                Text('Student Number: $studentNumber',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('School Year: $schoolYear'),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.green.shade200, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green.shade600, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Document Information",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.green.shade100, width: 1),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.person, color: Colors.green.shade600, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Student Number: $studentNumber',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today, color: Colors.green.shade600, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'School Year: $schoolYear',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
 
               // Schedule table
-              if (scheduleData.isNotEmpty)
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('Day')),
-                        DataColumn(label: Text('From')),
-                        DataColumn(label: Text('To')),
-                      ],
-                      rows: _generateDataTableRows(),
-                    ),
+              if (scheduleData.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.orange.shade200, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, color: Colors.orange.shade600, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Your Available Schedule",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.shade100, width: 1),
+                        ),
+                        child: DataTable(
+                          columns: [
+                            DataColumn(
+                              label: Text(
+                                'Day',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade700,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'From',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade700,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'To',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                          rows: _generateDataTableRows(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
 
               // Raw text fallback
-              if (extractedText != null && scheduleData.isEmpty)
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(extractedText!),
+              if (extractedText != null && scheduleData.isEmpty) ...[
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.red.shade200, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.red.shade600, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Schedule Not Found",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "We couldn't extract your schedule from the document. Please check if your ORF contains the correct schedule information.",
+                        style: TextStyle(
+                          color: Colors.red.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
 
               // Save button
-              if (scheduleData.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.save),
-                    label: const Text('Save Data'),
-                    onPressed: _saveScheduleData,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 14),
-                    ),
+              if (scheduleData.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade50,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.purple.shade200, width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.save, color: Colors.purple.shade600, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Ready to Save",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Your schedule has been extracted successfully. Click the button below to save your duty schedule.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.purple.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.save),
+                        label: const Text('Save Schedule'),
+                        onPressed: _saveScheduleData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+
+              // SBO/Working Student Portal Section (moved to bottom)
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.work_outline, color: Colors.grey.shade700, size: 24),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Job Type Selection",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Click the button below if you are a SBO or Working Student, please select your job type and you dont have to required on hk duty schedule.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black87,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.assignment),
+                      label: const Text("SBO/Working Student Portal"),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StudentJobType(student_id: widget.student_id),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.shade200, width: 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info, color: Colors.amber.shade700, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                "Important Remarks:",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "• SBO (Student Body Organization): For students involved in student government and campus leadership activities\n• Working Student: For students have woks outside and inside the campus ",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.amber.shade600,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

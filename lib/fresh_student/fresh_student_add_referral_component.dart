@@ -33,7 +33,7 @@ class _FreshStudentAddReferralComponentState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: FreshStudentDrawer(student_id: widget.student_id),
+      drawer: FreshStudentDrawer(student_id: widget.student_id, currentIndex: 1),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: AppBar(

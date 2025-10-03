@@ -85,6 +85,46 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     }
   }
 
+  Future<void> _logActivity({
+    required String userId,
+    required int userTypeId,
+    required String action,
+    required String module,
+    required String operation,
+    Map<String, dynamic>? details,
+    String status = "success",
+    String? errorMessage,
+  }) async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}activity_log.php");
+
+      Map<String, dynamic> payload = {
+        "user_id": userId,
+        "user_type_id": userTypeId,
+        "action": action,
+        "module": module,
+        "operation": operation,
+        "details": details,
+        "status": status,
+        "error_message": errorMessage,
+      };
+
+      var response = await http.post(url, body: {
+        "operation": "logActivity", // ✅ this matches your PHP
+        "json": jsonEncode(payload),
+      });
+
+      if (response.statusCode == 200) {
+        print(
+            "✅ Activity logged: $action on $module ($operation) → ${response.body}");
+      } else {
+        print("⚠️ Failed to log activity: ${response.body}");
+      }
+    } catch (e) {
+      print("❌ Error logging activity: $e");
+    }
+  }
+
   void updateScholarsProfile() async {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
@@ -108,6 +148,17 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             backgroundColor: Colors.green,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
+          );
+          _logActivity(
+            userId: widget.student_id,
+            userTypeId: 1,
+            action: "UPDATE",
+            module: "scholars",
+            operation: "updateScholarsProfile",
+            details: {
+              "stud_contactNumber": contactNumberController.text,
+              "stud_email": emailController.text,
+            },
           );
         }
       }
@@ -578,6 +629,14 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
           );
+          _logActivity(
+            userId: widget.student_id,
+            userTypeId: 1,
+            action: "UPDATE",
+            module: "authentication",
+            operation: "enable2FA",
+            details: {"status": "enabled"},
+          );
         } else {
           Get.snackbar(
             "Error",
@@ -625,6 +684,14 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             backgroundColor: Colors.green,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
+          );
+          _logActivity(
+            userId: widget.student_id,
+            userTypeId: 1,
+            action: "UPDATE",
+            module: "authentication",
+            operation: "disable2FA",
+            details: {"status": "disabled"},
           );
         } else {
           Get.snackbar(
@@ -761,6 +828,15 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                             colorText: Colors.white,
                             snackPosition: SnackPosition.BOTTOM,
                           );
+                          _logActivity(
+                            userId: widget.student_id,
+                            userTypeId: 1,
+                            action: "UPDATE",
+                            module: "scholars",
+                            operation: "updatePassword",
+                            details: {"message": "Password changed"},
+                          );
+
                           Navigator.pop(context);
                         } else if (res == 2) {
                           Get.snackbar(

@@ -42,6 +42,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Color warningColor = Colors.transparent;
   String warningText = "";
+  String uiMode = "bar"; // 'bar' or 'text'
+  String statusText = "";
+  Map<String, dynamic>? certificate;
+  String programAndYear = '';
+  String scholarshipName = '';
+  String sessionName = '';
 
   @override
   void initState() {
@@ -54,7 +60,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: StudentDrawer(student_id: widget.student_id),
+      drawer: StudentDrawer(student_id: widget.student_id, currentIndex: 0),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(50), // Set the height of the AppBar
         child: AppBar(
@@ -159,7 +165,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
                 const SizedBox(height: 30),
 
-                // Progress bar Card
+                // Progress / Status Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -171,7 +177,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Duty Hours Progress",
+                          uiMode == "text" ? "Status" : "Duty Hours Progress",
                           style: TextStyle(
                             color: Color(0xFF104038),
                             fontWeight: FontWeight.bold,
@@ -179,30 +185,59 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        LinearPercentIndicator(
-                          lineHeight: 22.0,
-                          percent: percent.clamp(0.0, 1.0),
-                          center: Text(
-                            '${(percent * 100).toStringAsFixed(0)}%',
+                        if (uiMode == "bar") ...[
+                          LinearPercentIndicator(
+                            lineHeight: 22.0,
+                            percent: percent.clamp(0.0, 1.0),
+                            center: Text(
+                              '${(percent * 100).toStringAsFixed(0)}%',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            animation: true,
+                            animateFromLastPercent: true,
+                            animationDuration: 2500,
+                            progressColor: const Color(0xFF104038),
+                            backgroundColor: Colors.grey.shade300,
+                            barRadius: const Radius.circular(12),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              "${renderedHours.toStringAsFixed(1)} / ${totalDutyHours.toStringAsFixed(1)} hours",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                          ),
+                        ] else ...[
+                          Text(
+                            statusText.isNotEmpty ? statusText : "",
                             style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                              color: Color(0xFF104038),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
                           ),
-                          animation: true,
-                          animateFromLastPercent: true,
-                          animationDuration: 2500,
-                          progressColor: const Color(0xFF104038),
-                          backgroundColor: Colors.grey.shade300,
-                          barRadius: const Radius.circular(12),
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            "${renderedHours.toStringAsFixed(1)} / ${totalDutyHours.toStringAsFixed(1)} hours",
-                            style: TextStyle(color: Colors.black54),
-                          ),
-                        ),
+                          const SizedBox(height: 12),
+                          if (certificate != null)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  _showCertificateDialog();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF104038),
+                                ),
+                                icon: const Icon(Icons.verified, color: Colors.white),
+                                label: const Text(
+                                  "View Certificate",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                        ],
                       ],
                     ),
                   ),
@@ -387,6 +422,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
           percent = renderedHours / totalDutyHours;
 
           studentFullName = res['StudentFullname'] ?? "";
+          uiMode = (res['ui_mode'] ?? 'bar').toString();
+          statusText = (res['status_text'] ?? '').toString();
+          certificate = res['certificate'];
+          programAndYear = (res['program_and_year'] ?? '').toString();
+          scholarshipName = (res['scholarship_name'] ?? '').toString();
+          sessionName = (res['session_name'] ?? '').toString();
         });
       } else {
         print("Invalid response format: $res");
@@ -427,5 +468,124 @@ class _StudentDashboardState extends State<StudentDashboard> {
     } catch (e) {
       print("Error fetching complaints: $e");
     }
+  }
+
+  void _showCertificateDialog() {
+    final cert = certificate ?? {};
+    final approvedBy = (cert['approved_by_name'] ?? '').toString();
+    final approvedOn = (cert['approved_on'] ?? '').toString();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            width: 520,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 4),
+                const Text(
+                  'Renewal Certificate',
+                  style: TextStyle(
+                    color: Color(0xFF1E6F50),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'HK RENEWAL APPROVED',
+                  style: TextStyle(
+                    color: Color(0xFF1E6F50),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        studentFullName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (programAndYear.isNotEmpty)
+                        Text(
+                          programAndYear,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Dear Mr./Ms. $studentFullName,',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.5),
+                      children: [
+                        const TextSpan(text: 'We are pleased to inform you that your application for renewal of your Hawak-Kamay Scholarship - '),
+                        TextSpan(text: scholarshipName.isNotEmpty ? scholarshipName : 'HK10', style: const TextStyle(fontWeight: FontWeight.w700)),
+                        const TextSpan(text: ', has been successfully verified and approved for the '),
+                        TextSpan(text: sessionName.isNotEmpty ? sessionName : '', style: const TextStyle(fontWeight: FontWeight.w700)),
+                        const TextSpan(text: ' of School Year.'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Congratulations on your continued dedication and hard work!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF1E6F50),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Approved on: $approvedOn', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                      Text('Approved by: $approvedBy', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

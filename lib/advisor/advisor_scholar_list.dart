@@ -55,6 +55,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
       drawer: AdvisorDrawer(
         advisorId: widget.advisor_id,
         supervisor_id: widget.supervisor_id,
+        currentIndex: 1,
       ),
       body: Container(
         decoration: BoxDecoration(

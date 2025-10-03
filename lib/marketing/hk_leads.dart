@@ -221,7 +221,7 @@ class _HKLeadsPageState extends State<HKLeadsPage> {
           ],
         ),
       ),
-      drawer: MarketingDrawer(adminEmail: widget.adminEmail),
+      drawer: MarketingDrawer(adminEmail: widget.adminEmail, currentIndex: 1),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(

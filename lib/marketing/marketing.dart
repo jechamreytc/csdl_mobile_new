@@ -232,7 +232,7 @@ class _MarketingDashboardState extends State<MarketingDashboard> {
           ),
         ),
       ),
-      drawer: MarketingDrawer(adminEmail: widget.adminEmail),
+      drawer: MarketingDrawer(adminEmail: widget.adminEmail, currentIndex: 0),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

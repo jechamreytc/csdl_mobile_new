@@ -124,6 +124,7 @@ class _AdvisorState extends State<Advisor> {
         drawer: AdvisorDrawer(
           advisorId: widget.advisor_id,
           supervisor_id: widget.supervisor_id,
+          currentIndex: 0,
         ),
         body: Container(
           decoration: BoxDecoration(

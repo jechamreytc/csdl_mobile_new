@@ -11,8 +11,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 class FreshStudentDrawer extends StatefulWidget {
   final String student_id;
+  final int currentIndex; // Add current screen index
 
-  const FreshStudentDrawer({Key? key, required this.student_id})
+  const FreshStudentDrawer({Key? key, required this.student_id, this.currentIndex = 0})
       : super(key: key);
 
   @override
@@ -20,7 +21,13 @@ class FreshStudentDrawer extends StatefulWidget {
 }
 
 class _FreshStudentDrawerState extends State<FreshStudentDrawer> {
-  int selectedIndex = 0;
+  late int selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.currentIndex; // Initialize with current screen
+  }
 
   @override
   Widget build(BuildContext context) {

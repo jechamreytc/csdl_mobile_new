@@ -1,7 +1,7 @@
 import 'dart:html' as html;
 
 class SessionStorage {
-  static const String url = "http://localhost/finalhkTestForMobile/api/";
+  static const String url = "http://localhost/finalhk/api/";
 
   // static const String url = "http://192.168.1.146/finalhk/api/";
 

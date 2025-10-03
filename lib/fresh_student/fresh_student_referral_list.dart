@@ -74,7 +74,7 @@ class _FreshStudentReferralListState extends State<FreshStudentReferralList> {
         ),
       ),
       drawer: FreshStudentDrawer(
-          student_id: widget.student_id), // Optional: replace with your drawer
+          student_id: widget.student_id, currentIndex: 1), // Optional: replace with your drawer
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

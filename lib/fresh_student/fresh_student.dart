@@ -29,6 +29,11 @@ class _FreshStudentState extends State<FreshStudent> {
   int totalReferrals = 0;
   int referralGoal = 5;
   String freshStudentName = '';
+  String statusText = '';
+  Map<String, dynamic>? certificate;
+  String programAndYear = '';
+  String scholarshipName = '';
+  String sessionName = '';
 
   Color getProgressColor(int count) {
     if (count >= referralGoal) return const Color(0xFF104038);
@@ -72,6 +77,7 @@ class _FreshStudentState extends State<FreshStudent> {
       ),
       drawer: FreshStudentDrawer(
         student_id: widget.student_id,
+        currentIndex: 0,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -163,7 +169,7 @@ class _FreshStudentState extends State<FreshStudent> {
 
                 const SizedBox(height: 30),
 
-                // Progress bar
+                // Status (if any) for renewal, else Referral Progress
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -175,7 +181,7 @@ class _FreshStudentState extends State<FreshStudent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Referral Progress",
+                          statusText.isNotEmpty ? "Status" : "Referral Progress",
                           style: const TextStyle(
                             color: Color(0xFF104038),
                             fontWeight: FontWeight.bold,
@@ -183,7 +189,23 @@ class _FreshStudentState extends State<FreshStudent> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        LinearPercentIndicator(
+                        if (statusText.isNotEmpty) ...[
+                          Text(statusText,
+                              style: const TextStyle(
+                                  color: Color(0xFF104038),
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 12),
+                          if (certificate != null)
+                            ElevatedButton.icon(
+                              onPressed: () => _showCertificateDialog(context),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF104038)),
+                              icon: const Icon(Icons.verified, color: Colors.white),
+                              label: const Text("View Certificate",
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                        ] else
+                          LinearPercentIndicator(
                           lineHeight: 20.0,
                           percent:
                               (totalReferrals / referralGoal).clamp(0.0, 1.0),
@@ -260,17 +282,24 @@ class _FreshStudentState extends State<FreshStudent> {
         "stud_active_id": widget.student_id,
       };
       Map<String, String> requestBody = {
-        "operation": "getTotalReferrals",
+        // Reuse getStudentRemainingHours to also fetch renewal status
+        "operation": "getStudentRemainingHours",
         "json": jsonEncode(jsonData),
       };
 
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && res is Map<String, dynamic>) {
         setState(() {
-          totalReferrals = int.tryParse(res["total_referrals"].toString()) ?? 0;
-          freshStudentName = res["FreshmenName"] ?? "";
+          // Keep original referral fields when available; else default to 0
+          totalReferrals = int.tryParse(res["total_referrals"]?.toString() ?? "0") ?? 0;
+          freshStudentName = res["StudentFullname"] ?? freshStudentName;
+          statusText = (res['status_text'] ?? '').toString();
+          certificate = res['certificate'];
+          programAndYear = (res['program_and_year'] ?? '').toString();
+          scholarshipName = (res['scholarship_name'] ?? '').toString();
+          sessionName = (res['session_name'] ?? '').toString();
         });
       }
 
@@ -278,5 +307,109 @@ class _FreshStudentState extends State<FreshStudent> {
     } catch (e) {
       print("Error fetching total referrals: $e");
     }
+  }
+
+  void _showCertificateDialog(BuildContext context) {
+    final approvedBy = (certificate?['approved_by_name'] ?? '').toString();
+    final approvedOn = (certificate?['approved_on'] ?? '').toString();
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          width: 520,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'Renewal Certificate',
+                style: TextStyle(
+                  color: Color(0xFF1E6F50),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'HK RENEWAL APPROVED',
+                style: TextStyle(
+                  color: Color(0xFF1E6F50),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      freshStudentName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (programAndYear.isNotEmpty)
+                      Text(programAndYear, style: const TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: RichText(
+                  text: TextSpan(
+                    style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.5),
+                    children: [
+                      const TextSpan(text: 'We are pleased to inform you that your application for renewal of your Hawak-Kamay Scholarship - '),
+                      TextSpan(text: scholarshipName.isNotEmpty ? scholarshipName : 'HK10', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      const TextSpan(text: ', has been successfully verified and approved for the '),
+                      TextSpan(text: sessionName.isNotEmpty ? sessionName : '', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      const TextSpan(text: ' of School Year.'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Congratulations on your continued dedication and hard work!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF1E6F50),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Approved on: $approvedOn', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                    Text('Approved by: $approvedBy', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -76,7 +76,7 @@ class _StudentState extends State<Student> {
           ),
         ),
       ),
-      drawer: StudentDrawer(student_id: widget.student_id),
+      drawer: StudentDrawer(student_id: widget.student_id, currentIndex: 1),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

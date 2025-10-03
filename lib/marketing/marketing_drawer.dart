@@ -1,22 +1,30 @@
 import 'package:csdl_mobile/marketing/hk_leads.dart';
 import 'package:csdl_mobile/marketing/marketing.dart';
 import 'package:csdl_mobile/marketing/marketing_edit_profile.dart';
+import 'package:csdl_mobile/marketing/marketing_settings.dart';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 class MarketingDrawer extends StatefulWidget {
   final String adminEmail;
+  final int currentIndex; // Add current screen index
 
-  const MarketingDrawer({Key? key, required this.adminEmail}) : super(key: key);
+  const MarketingDrawer({Key? key, required this.adminEmail, this.currentIndex = 0}) : super(key: key);
 
   @override
   _MarketingDrawerState createState() => _MarketingDrawerState();
 }
 
 class _MarketingDrawerState extends State<MarketingDrawer> {
-  int selectedIndex = 0;
+  late int selectedIndex;
   bool settingsExpanded = false; // NEW
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.currentIndex; // Initialize with current screen
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,18 +123,20 @@ class _MarketingDrawerState extends State<MarketingDrawer> {
             },
           ),
 
+          // ACCOUNT SETTINGS
           buildDrawerItem(
-            index: 1,
-            icon: Icons.leaderboard,
-            label: "Settings and Privacy",
+            index: 2,
+            icon: Icons.settings,
+            label: "Account Settings",
             onTap: () {
-              setState(() => selectedIndex = 1);
+              setState(() => selectedIndex = 2);
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => MarketingEditProfile(
-                          adminEmail: widget.adminEmail,
-                        )),
+                  builder: (context) => MarketingSettings(
+                    adminEmail: widget.adminEmail,
+                  ),
+                ),
               );
             },
           ),

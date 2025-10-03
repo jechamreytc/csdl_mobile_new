@@ -10,9 +10,10 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 class AdvisorDrawer extends StatefulWidget {
   final String advisorId;
   final String supervisor_id;
+  final int currentIndex; // Add current screen index
 
   const AdvisorDrawer(
-      {Key? key, required this.advisorId, required this.supervisor_id})
+      {Key? key, required this.advisorId, required this.supervisor_id, this.currentIndex = 0})
       : super(key: key);
 
   @override
@@ -20,7 +21,13 @@ class AdvisorDrawer extends StatefulWidget {
 }
 
 class _AdvisorDrawerState extends State<AdvisorDrawer> {
-  int selectedIndex = 0;
+  late int selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.currentIndex; // Initialize with current screen
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +183,7 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
 
           // LOGOUT
           buildDrawerItem(
-            index: 4,
+            index: 5,
             icon: Icons.logout,
             iconColor: Colors.red,
             label: "Logout",
