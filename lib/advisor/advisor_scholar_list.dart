@@ -39,25 +39,26 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(50), // Set the height of the AppBar
-        child: AppBar(
-          backgroundColor:
-              Colors.transparent, // Make the AppBar background transparent
-          elevation: 0, // Remove the shadow of the AppBar
-          flexibleSpace: Image.asset(
-            'assets/images/coc_logo.png', // Path to your background image
-            height: 50,
-            width: 50, // Ensure the image covers the entire area
+              appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: Image.asset(
+              'assets/images/coc_logo.png',
+              height: 50,
+              width: 50,
+            ),
           ),
         ),
-      ),
       drawer: AdvisorDrawer(
         advisorId: widget.advisor_id,
         supervisor_id: widget.supervisor_id,
         currentIndex: 1,
       ),
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.green.shade50, Colors.green.shade200],
@@ -65,312 +66,580 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Stack(
-          children: [
-            // Image.asset(
-            //   'assets/images/csdl_background.jpg',
-            //   fit: BoxFit.cover,
-            //   width: double.infinity,
-            //   height: double.infinity,
-            //   alignment: Alignment.topLeft,
-            // ),
-            // Container(
-            //   decoration: const BoxDecoration(
-            //     gradient: LinearGradient(
-            //       colors: [
-            //         Color.fromRGBO(
-            //             255, 255, 255, 0.9), // White with 50% transparency
-            //         Color.fromRGBO(
-            //             255, 255, 255, 0.9), // White with 50% transparency
-            //       ],
-            //       begin: Alignment.topCenter,
-            //       end: Alignment.bottomCenter,
-            //     ),
-            //   ),
-            // ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 40.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 70), // Space for app bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 40),
-                    const Text(
-                      "ASSIGNED SCHOLARS",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2F332D),
+                    // Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.1),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.people,
+                        color: Colors.green[700],
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Separate header pills
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.green[700],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'NAME',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        "Assigned Scholars",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                        const SizedBox(width: 80),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.green[700],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'SECTION',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // Scholar list below header pills
                     Container(
-                      width: double.infinity,
-                      height: 400,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.green[700],
+                        color: Colors.green[100],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : scholars.isNotEmpty
-                              ? ListView.builder(
-                                  itemCount: scholars.length,
-                                  itemBuilder: (context, index) {
-                                    final scholar = scholars[index];
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 2,
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) =>
-                                                      AlertDialog(
-                                                    backgroundColor:
-                                                        const Color(0xFF1A6312),
-                                                    title: Text(
-                                                      scholar['Fullname'] ??
-                                                          'Unknown',
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 18,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    content: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          "Section: ${scholar['sub_code'] ?? 'N/A'}",
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 8),
-                                                        Text(
-                                                          "Contact: ${scholar['stud_contactNumber'] ?? 'N/A'}",
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 4),
-                                                        Text(
-                                                          "Email: ${scholar['stud_email'] ?? 'N/A'}",
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 4),
-                                                        Text(
-                                                          "Room: ${scholar['sub_room'] ?? 'N/A'}",
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8),
-                                                child: Text(
-                                                  scholar['Fullname'] ??
-                                                      'Unknown',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                              scholar['sub_code'] ?? 'Office',
-                                              textAlign: TextAlign.right,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton(
-                                            onPressed: scholar[
-                                                        'assign_render_status'] ==
-                                                    1
-                                                ? () {
-                                                    final assignment = scholar[
-                                                            'assignment_name'] ??
-                                                        '';
-                                                    if (assignment ==
-                                                        "Office") {
-                                                      // Uncomment when ready
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              //     AdvisorEvaluationOffice(
-                                                              //   scholarId: scholar[
-                                                              //       'stud_id'],
-                                                              // ),
-                                                              AdvisorEvaluationOffice(
-                                                            advisor_id: widget
-                                                                .advisor_id,
-                                                            scholar_id: scholar[
-                                                                'stud_active_id'],
-                                                            supervisor_id: widget
-                                                                .supervisor_id,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    } else if (assignment ==
-                                                        "Student Facilitator") {
-                                                      // Uncomment when ready
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              //     AdvisorEvaluation(
-                                                              //   scholarId: scholar[
-                                                              //       'stud_id'],
-                                                              // ),
-                                                              AdvisorEvaluation(
-                                                            advisor_id: widget
-                                                                .advisor_id,
-                                                            scholar_id: scholar[
-                                                                'stud_active_id'],
-                                                            supervisor_id: widget
-                                                                .supervisor_id,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    } else {
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                              "No evaluation available for this scholar."),
-                                                        ),
-                                                      );
-                                                    }
-                                                  }
-                                                : null, // Button is disabled if assign_render_status != 1
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  scholar['assign_render_status'] ==
-                                                          1
-                                                      ? Colors.white
-                                                      : Colors.white
-                                                          .withOpacity(0.5),
-                                              foregroundColor:
-                                                  Colors.green[900],
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 10),
-                                            ),
-                                            child: const Text("Evaluate"),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                )
-                              : Center(
-                                  child: Text(
-                                    errorMessage.isNotEmpty
-                                        ? errorMessage
-                                        : 'No scholars found.',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
+                      child: Text(
+                        '${scholars.length}',
+                        style: TextStyle(
+                          color: Colors.green[800],
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // Scholars List
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: isLoading
+                    ? Container(
+                        height: 200,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                          ),
+                        ),
+                      )
+                    : scholars.isNotEmpty
+                        ? ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: scholars.length,
+                            itemBuilder: (context, index) {
+                              final scholar = scholars[index];
+                              return _buildScholarCard(scholar, index);
+                            },
+                          )
+                        : Container(
+                            height: 200,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.people_outline,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    errorMessage.isNotEmpty
+                                        ? errorMessage
+                                        : 'No scholars found.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 50), // Bottom padding to show background
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Function to build individual scholar card
+  Widget _buildScholarCard(Map<String, dynamic> scholar, int index) {
+    bool isEvaluated = scholar['assign_evaluation_status'] == 1;
+    bool canEvaluate = scholar['assign_render_status'] == 1;
+    String assignmentType = scholar['assignment_name'] ?? 'Office';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.green.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.05),
+            blurRadius: 4,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row with name and status
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: assignmentType == 'Office' 
+                        ? Colors.blue.withOpacity(0.1) 
+                        : Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    assignmentType == 'Office' ? Icons.business : Icons.school,
+                    color: assignmentType == 'Office' ? Colors.blue[700] : Colors.green[700],
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        scholar['Fullname'] ?? 'Unknown',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        scholar['sub_code'] ?? 'Office',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: assignmentType == 'Office' 
+                        ? Colors.blue[100] 
+                        : Colors.green[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    assignmentType,
+                    style: TextStyle(
+                      color: assignmentType == 'Office' 
+                          ? Colors.blue[800] 
+                          : Colors.green[800],
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Details row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoItem(
+                    Icons.phone,
+                    'Contact',
+                    scholar['stud_contactNumber'] ?? 'N/A',
+                  ),
+                ),
+                Expanded(
+                  child: _buildInfoItem(
+                    Icons.room,
+                    'Room',
+                    scholar['sub_room'] ?? 'N/A',
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Action row
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _showScholarDetailsDialog(scholar),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.green.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.green[700],
+                            size: 14,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Details',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildEvaluationButton(scholar),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  // Function to build info item
+  Widget _buildInfoItem(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 12,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[700],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Function to show scholar details dialog
+  void _showScholarDetailsDialog(Map<String, dynamic> scholar) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.person,
+              color: Colors.green[700],
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                scholar['Fullname'] ?? 'Unknown',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Section', scholar['sub_code'] ?? 'N/A'),
+            _buildDetailRow('Contact', scholar['stud_contactNumber'] ?? 'N/A'),
+            _buildDetailRow('Email', scholar['stud_email'] ?? 'N/A'),
+            _buildDetailRow('Room', scholar['sub_room'] ?? 'N/A'),
+            _buildDetailRow('Assignment', scholar['assignment_name'] ?? 'N/A'),
+            if (scholar['sub_time'] != null)
+              _buildDetailRow('Time', scholar['sub_time']),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.green[700],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              "Close",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Function to build detail row
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Function to build evaluation button based on student status
+  Widget _buildEvaluationButton(Map<String, dynamic> scholar) {
+    bool isEvaluated = scholar['assign_evaluation_status'] == 1;
+    bool canEvaluate = scholar['assign_render_status'] == 1;
+    
+    if (isEvaluated) {
+      // Student is already evaluated - show "Evaluated" status (not clickable)
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.green[600],
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 12,
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              "Evaluated",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (canEvaluate) {
+      // Student can be evaluated - show "Evaluate" button
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: ElevatedButton(
+          onPressed: () {
+            _navigateToEvaluation(scholar);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green[700],
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            elevation: 0,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.rate_review,
+                size: 12,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 4),
+              const Text(
+                "Evaluate",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // Student cannot be evaluated yet - show disabled button
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.schedule,
+              color: Colors.grey[600],
+              size: 12,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              "Evaluate",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  // Function to navigate to evaluation
+  void _navigateToEvaluation(Map<String, dynamic> scholar) {
+    final assignment = scholar['assignment_name'] ?? '';
+    
+    if (assignment == "Office") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AdvisorEvaluationOffice(
+            advisor_id: widget.advisor_id,
+            scholar_id: scholar['stud_active_id'].toString(),
+            supervisor_id: widget.supervisor_id,
+          ),
+        ),
+      ).then((_) {
+        // Refresh the scholar list when returning from evaluation
+        getAssignedScholars();
+      });
+    } else if (assignment == "Student Facilitator") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AdvisorEvaluation(
+            advisor_id: widget.advisor_id,
+            scholar_id: scholar['stud_active_id'].toString(),
+            supervisor_id: widget.supervisor_id,
+          ),
+        ),
+      ).then((_) {
+        // Refresh the scholar list when returning from evaluation
+        getAssignedScholars();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("No evaluation available for this scholar."),
+        ),
+      );
+    }
   }
 
   // Function to fetch assigned scholars

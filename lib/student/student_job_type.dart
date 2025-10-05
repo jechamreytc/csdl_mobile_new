@@ -32,33 +32,39 @@ class _StudentJobTypeState extends State<StudentJobType> {
   @override
   void initState() {
     super.initState();
-    fetchReferrals();
+    fetchJobType();
   }
 
-  /// FETCH REFERRALS
-  Future<void> fetchReferrals() async {
+  /// FETCH JOB TYPE DATA
+  Future<void> fetchJobType() async {
     final url = Uri.parse("${SessionStorage.url}transaction.php");
 
     try {
       final response = await http.post(
         url,
-        body: {'operation': 'getReferrals', 'json': '{}'},
+        body: {
+          'operation': 'getJobType', 
+          'json': jsonEncode({"job_stud_id": widget.student_id})
+        },
       );
 
       print("Response Code: ${response.statusCode}");
       print("Raw Response: ${response.body}");
 
       final data = jsonDecode(response.body);
-      if (data['success'] == true) {
-        setState(() {
-          isLoading = false;
-        });
-      } else {
-        print("API returned error: ${data['error']}");
+      if (data != null) {
+        print("Job type data: $data");
       }
+      
+      setState(() {
+        isLoading = false;
+      });
     } catch (e, stackTrace) {
-      print('❌ fetchReferrals Exception: $e');
+      print('❌ fetchJobType Exception: $e');
       print('🧾 StackTrace:\n$stackTrace');
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -133,8 +139,17 @@ class _StudentJobTypeState extends State<StudentJobType> {
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Uploaded successfully")),
+          SnackBar(
+            content: Text(data['message'] ?? "Uploaded successfully"),
+            backgroundColor: Colors.green,
+          ),
         );
+        
+        // Show file URL if available
+        if (data['file_url'] != null) {
+          print("File uploaded successfully: ${data['file_url']}");
+        }
+        
         setState(() {
           selectedFile = null;
           selectedFileBytes = null;
@@ -142,11 +157,24 @@ class _StudentJobTypeState extends State<StudentJobType> {
           selectedFileName = null;
         });
       } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['message'] ?? "Upload failed"),
+            backgroundColor: Colors.red,
+          ),
+        );
         print("API returned error: ${data['message']}");
       }
     } catch (e, stackTrace) {
       print('❌ uploadJobType Exception: $e');
       print('🧾 StackTrace:\n$stackTrace');
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Upload failed: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
 
     setState(() => isUploading = false);

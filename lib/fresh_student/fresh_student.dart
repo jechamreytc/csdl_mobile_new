@@ -27,6 +27,7 @@ class _FreshStudentState extends State<FreshStudent> {
   GlobalKey globalKey = GlobalKey();
   late String studentIdNumber;
   int totalReferrals = 0;
+  int approvedReferrals = 0;
   int referralGoal = 5;
   String freshStudentName = '';
   String statusText = '';
@@ -57,6 +58,7 @@ class _FreshStudentState extends State<FreshStudent> {
   void initState() {
     super.initState();
     getTotalReferrals();
+    getApprovedReferralsCount();
   }
 
   @override
@@ -208,11 +210,11 @@ class _FreshStudentState extends State<FreshStudent> {
                           LinearPercentIndicator(
                           lineHeight: 20.0,
                           percent:
-                              (totalReferrals / referralGoal).clamp(0.0, 1.0),
+                              (approvedReferrals / referralGoal).clamp(0.0, 1.0),
                           center: Text(
-                            totalReferrals >= referralGoal
+                            approvedReferrals >= referralGoal
                                 ? "Completed"
-                                : "$totalReferrals / $referralGoal",
+                                : "$approvedReferrals / $referralGoal",
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -221,19 +223,32 @@ class _FreshStudentState extends State<FreshStudent> {
                           animation: true,
                           animateFromLastPercent: true,
                           animationDuration: 2500,
-                          progressColor: getProgressColor(totalReferrals),
+                          progressColor: getProgressColor(approvedReferrals),
                           backgroundColor: Colors.grey.shade300,
                           barRadius: const Radius.circular(10),
                         ),
                         const SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: Text(
-                            "Total Referrals: $totalReferrals",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "Approved Leads: $approvedReferrals",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "Total Referrals: $totalReferrals",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -411,5 +426,29 @@ class _FreshStudentState extends State<FreshStudent> {
         ),
       ),
     );
+  }
+
+  void getApprovedReferralsCount() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      Map<String, dynamic> jsonData = {
+        "stud_active_id": widget.student_id,
+      };
+      Map<String, String> requestBody = {
+        "operation": "getApprovedReferralsCount",
+        "json": jsonEncode(jsonData),
+      };
+
+      var response = await http.post(url, body: requestBody);
+      var res = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && res['success'] == true) {
+        setState(() {
+          approvedReferrals = res['approved_count'] ?? 0;
+        });
+      }
+    } catch (e) {
+      print("Error fetching approved referrals count: $e");
+    }
   }
 }
