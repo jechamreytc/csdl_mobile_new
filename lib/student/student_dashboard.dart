@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/student_drawer.dart';
+import 'package:csdl_mobile/components/sf_duty_status.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 // import 'package:qr_bar_code/qr/src/qr_code.dart';
@@ -19,6 +20,9 @@ import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'package:csdl_mobile/student/student.dart';
 import 'package:csdl_mobile/student/student_announcement.dart';
 import 'dart:html' as html;
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String student_id;
@@ -230,7 +234,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF104038),
                                 ),
-                                icon: const Icon(Icons.verified, color: Colors.white),
+                                icon: const Icon(Icons.verified,
+                                    color: Colors.white),
                                 label: const Text(
                                   "View Certificate",
                                   style: TextStyle(color: Colors.white),
@@ -478,7 +483,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
       context: context,
       builder: (context) {
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Container(
             padding: const EdgeInsets.all(24),
             width: 520,
@@ -542,13 +548,26 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   alignment: Alignment.centerLeft,
                   child: RichText(
                     text: TextSpan(
-                      style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.5),
+                      style: const TextStyle(
+                          color: Colors.black87, fontSize: 13, height: 1.5),
                       children: [
-                        const TextSpan(text: 'We are pleased to inform you that your application for renewal of your Hawak-Kamay Scholarship - '),
-                        TextSpan(text: scholarshipName.isNotEmpty ? scholarshipName : 'HK10', style: const TextStyle(fontWeight: FontWeight.w700)),
-                        const TextSpan(text: ', has been successfully verified and approved for the '),
-                        TextSpan(text: sessionName.isNotEmpty ? sessionName : '', style: const TextStyle(fontWeight: FontWeight.w700)),
-                        const TextSpan(text: ' of School Year.'),
+                        const TextSpan(
+                            text:
+                                'We are pleased to inform you that your application for renewal of your '),
+                        TextSpan(
+                            text: scholarshipName.isNotEmpty
+                                ? scholarshipName
+                                : 'HK10',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w700)),
+                        const TextSpan(
+                            text:
+                                ' Scholarship, has been successfully verified and approved for the '),
+                        TextSpan(
+                            text: sessionName.isNotEmpty ? sessionName : '',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w700)),
+                        // const TextSpan(text: ' of School Year.'),
                       ],
                     ),
                   ),
@@ -568,24 +587,288 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Approved on: $approvedOn', style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                      Text('Approved by: $approvedBy', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                      Text('Approved on: $approvedOn',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54)),
+                      Text('Approved by: $approvedBy',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54)),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ),
+                 const SizedBox(height: 20),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                   children: [
+                     ElevatedButton.icon(
+                       onPressed: () async {
+                         await _downloadCertificate();
+                       },
+                       style: ElevatedButton.styleFrom(
+                         backgroundColor: const Color(0xFF1E6F50),
+                         padding: const EdgeInsets.symmetric(
+                           horizontal: 20,
+                           vertical: 12,
+                         ),
+                         shape: RoundedRectangleBorder(
+                           borderRadius: BorderRadius.circular(8),
+                         ),
+                       ),
+                       icon: const Icon(
+                         Icons.download,
+                         color: Colors.white,
+                         size: 18,
+                       ),
+                       label: const Text(
+                         'Download Certificate',
+                         style: TextStyle(
+                           color: Colors.white,
+                           fontWeight: FontWeight.w600,
+                         ),
+                       ),
+                     ),
+                     TextButton(
+                       onPressed: () => Navigator.of(context).pop(),
+                       child: const Text(
+                         'Close',
+                         style: TextStyle(
+                           color: Color(0xFF1E6F50),
+                           fontWeight: FontWeight.w600,
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  Future<void> _downloadCertificate() async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E6F50)),
+          ),
+        ),
+      );
+
+      // Create PDF document
+      final PdfDocument document = PdfDocument();
+      final PdfPage page = document.pages.add();
+      final Size pageSize = page.getClientSize();
+
+      // Get certificate data
+      final cert = certificate ?? {};
+      final approvedBy = (cert['approved_by_name'] ?? '').toString();
+      final approvedOn = (cert['approved_on'] ?? '').toString();
+
+      // Create graphics
+      final PdfGraphics graphics = page.graphics;
+
+      // Add background color
+      graphics.drawRectangle(
+        brush: PdfSolidBrush(PdfColor(240, 248, 255)),
+        bounds: Rect.fromLTWH(0, 0, pageSize.width, pageSize.height),
+      );
+
+      // Add border
+      graphics.drawRectangle(
+        pen: PdfPen(PdfColor(30, 111, 80), width: 3),
+        bounds: Rect.fromLTWH(20, 20, pageSize.width - 40, pageSize.height - 40),
+      );
+
+      // Title
+      final PdfFont titleFont = PdfStandardFont(PdfFontFamily.helvetica, 28, style: PdfFontStyle.bold);
+      final PdfStringFormat titleFormat = PdfStringFormat(alignment: PdfTextAlignment.center);
+      graphics.drawString(
+        'RENEWAL CERTIFICATE',
+        titleFont,
+        format: titleFormat,
+        bounds: Rect.fromLTWH(0, 50, pageSize.width, 40),
+        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      );
+
+      // Subtitle
+      final PdfFont subtitleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
+      graphics.drawString(
+        'HK RENEWAL APPROVED',
+        subtitleFont,
+        format: titleFormat,
+        bounds: Rect.fromLTWH(0, 100, pageSize.width, 30),
+        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      );
+
+      // Student Information
+      final PdfFont infoFont = PdfStandardFont(PdfFontFamily.helvetica, 14);
+      graphics.drawString(
+        'Student Information:',
+        PdfStandardFont(PdfFontFamily.helvetica, 14, style: PdfFontStyle.bold),
+        bounds: Rect.fromLTWH(50, 160, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      );
+
+      graphics.drawString(
+        studentFullName,
+        PdfStandardFont(PdfFontFamily.helvetica, 16, style: PdfFontStyle.bold),
+        bounds: Rect.fromLTWH(50, 185, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+      );
+
+      if (programAndYear.isNotEmpty) {
+        graphics.drawString(
+          programAndYear,
+          infoFont,
+          bounds: Rect.fromLTWH(50, 210, pageSize.width - 100, 20),
+          brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+        );
+      }
+
+      // Greeting
+      graphics.drawString(
+        'Dear Mr./Ms. $studentFullName,',
+        infoFont,
+        bounds: Rect.fromLTWH(50, 250, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+      );
+
+      // Main content
+      final String mainContent = 'We are pleased to inform you that your application for renewal of your ${scholarshipName.isNotEmpty ? scholarshipName : 'HK10'} Scholarship, has been successfully verified and approved for the ${sessionName.isNotEmpty ? sessionName : ''}.';
+      
+      final PdfStringFormat contentFormat = PdfStringFormat(
+        alignment: PdfTextAlignment.justify,
+        lineSpacing: 10,
+        wordWrap: PdfWordWrapType.word,
+      );
+      
+      // Use a larger text area to prevent cutoff
+      graphics.drawString(
+        mainContent,
+        infoFont,
+        format: contentFormat,
+        bounds: Rect.fromLTWH(50, 280, pageSize.width - 100, 150),
+        brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+      );
+
+      // Congratulations
+      graphics.drawString(
+        'Congratulations on your continued dedication and hard work!',
+        PdfStandardFont(PdfFontFamily.helvetica, 16, style: PdfFontStyle.bold),
+        format: PdfStringFormat(
+          alignment: PdfTextAlignment.center,
+          wordWrap: PdfWordWrapType.word,
+        ),
+        bounds: Rect.fromLTWH(50, 450, pageSize.width - 100, 50),
+        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      );
+
+      // Approval details
+      graphics.drawString(
+        'Approval Details:',
+        PdfStandardFont(PdfFontFamily.helvetica, 14, style: PdfFontStyle.bold),
+        bounds: Rect.fromLTWH(50, 520, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      );
+
+      graphics.drawString(
+        'Approved on: $approvedOn',
+        infoFont,
+        bounds: Rect.fromLTWH(50, 545, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+      );
+
+      graphics.drawString(
+        'Approved by: $approvedBy',
+        infoFont,
+        bounds: Rect.fromLTWH(50, 570, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+      );
+
+      // Add signature line using rectangle
+      graphics.drawRectangle(
+        pen: PdfPen(PdfColor(30, 111, 80), width: 1),
+        bounds: Rect.fromLTWH(50, 610, pageSize.width - 100, 0),
+      );
+
+      graphics.drawString(
+        'Authorized Signature',
+        PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.italic),
+        format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        bounds: Rect.fromLTWH(50, 620, pageSize.width - 100, 20),
+        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      );
+
+      // Save PDF
+      final List<int> bytes = await document.save();
+      document.dispose();
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      if (kIsWeb) {
+        // For web, download using blob
+        final base64Data = base64Encode(bytes);
+        final anchor = html.AnchorElement(
+          href: 'data:application/pdf;base64,$base64Data',
+        )
+          ..download = 'HK_Renewal_Certificate_${studentFullName.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf'
+          ..target = 'blank';
+        html.document.body!.append(anchor);
+        anchor.click();
+        anchor.remove();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Certificate downloaded successfully!"),
+            backgroundColor: Color(0xFF1E6F50),
+          ),
+        );
+      } else {
+        // For mobile, save to device storage
+        final status = await Permission.storage.request();
+        if (status.isGranted) {
+          final directory = await getExternalStorageDirectory();
+          final path = directory!.path;
+          final file = File('$path/HK_Renewal_Certificate_${studentFullName.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf');
+          await file.writeAsBytes(bytes);
+
+          // Open the file
+          await OpenFilex.open(file.path);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Certificate saved and opened successfully!"),
+              backgroundColor: Color(0xFF1E6F50),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Storage permission denied."),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error generating certificate: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

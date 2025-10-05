@@ -23,8 +23,17 @@ class _StudentOcrState extends State<StudentOcr> {
   Map<String, List<Map<String, String>>> scheduleData = {};
   String? studentNumber;
   String? schoolYear;
+  bool hasExistingOcr = false;
+  bool requiresApproval = false;
+  Map<String, dynamic>? ocrRequestStatus;
+  bool isLoadingEligibility = false;
 
   @override
+  void initState() {
+    super.initState();
+    _checkOcrEligibility();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,84 +109,236 @@ class _StudentOcrState extends State<StudentOcr> {
 
               const SizedBox(height: 24),
 
-              // ORF Upload Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.teal.shade50, Colors.teal.shade100],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              // OCR Status Section
+              if (isLoadingEligibility) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.blue.shade200, width: 1),
                   ),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.teal.shade300, width: 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(color: Colors.blue.shade600),
+                      const SizedBox(width: 16),
+                      Text(
+                        "Checking OCR eligibility...",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.picture_as_pdf, size: 32, color: Colors.teal.shade700),
-                        const SizedBox(width: 8),
-                        Text(
-                          "ORF Upload",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.teal.shade700,
+              ] else if (hasExistingOcr) ...[
+                // Existing OCR Status
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.orange.shade50, Colors.orange.shade100],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.orange.shade300, width: 2),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.warning, size: 32, color: Colors.orange.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            "OCR Schedule Exists",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "You already have an existing OCR schedule. To upload a new one, you need admin approval.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.orange.shade600,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      if (ocrRequestStatus != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.orange.shade200, width: 1),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    ocrRequestStatus!['ocr_request_status'] == 'Approved' 
+                                        ? Icons.check_circle 
+                                        : ocrRequestStatus!['ocr_request_status'] == 'Declined'
+                                            ? Icons.cancel
+                                            : ocrRequestStatus!['ocr_request_status'] == 'Completed'
+                                                ? Icons.task_alt
+                                                : Icons.pending,
+                                    color: ocrRequestStatus!['ocr_request_status'] == 'Approved' 
+                                        ? Colors.green 
+                                        : ocrRequestStatus!['ocr_request_status'] == 'Declined'
+                                            ? Colors.red
+                                            : ocrRequestStatus!['ocr_request_status'] == 'Completed'
+                                                ? Colors.blue
+                                                : Colors.orange,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Request Status: ${ocrRequestStatus!['ocr_request_status']}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: ocrRequestStatus!['ocr_request_status'] == 'Approved' 
+                                          ? Colors.green 
+                                          : ocrRequestStatus!['ocr_request_status'] == 'Declined'
+                                              ? Colors.red
+                                              : ocrRequestStatus!['ocr_request_status'] == 'Completed'
+                                                  ? Colors.blue
+                                                  : Colors.orange,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (ocrRequestStatus == null || ocrRequestStatus!['ocr_request_status'] == 'Declined' || ocrRequestStatus!['ocr_request_status'] == 'Completed') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.request_page),
+                          label: const Text('Request OCR Upload'),
+                          onPressed: _createOcrRequest,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ] else if (ocrRequestStatus!['ocr_request_status'] == 'Approved') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.upload_file),
+                          label: const Text('Upload PDF'),
+                          onPressed: _pickPDFText,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "Upload your Official Registration Form (ORF) to get your duty schedule",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.teal.shade600,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: _pickPDFText,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.teal.shade200, width: 1),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.upload_file, color: Colors.teal.shade600),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Choose PDF File",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.teal.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Supported format: PDF only",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.teal.shade500,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ] else ...[
+                // Normal ORF Upload Section
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.teal.shade50, Colors.teal.shade100],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.teal.shade300, width: 2),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.picture_as_pdf, size: 32, color: Colors.teal.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            "ORF Upload",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Upload your Official Registration Form (ORF) to get your duty schedule",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.teal.shade600,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: _pickPDFText,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.teal.shade200, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.upload_file, color: Colors.teal.shade600),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Choose PDF File",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.teal.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Supported format: PDF only",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.teal.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               // Display extracted info
               if (studentNumber != null && schoolYear != null) ...[
@@ -808,6 +969,11 @@ class _StudentOcrState extends State<StudentOcr> {
           String message =
               responseBody != "0" ? responseBody : 'Error saving data.';
 
+          // If upload was successful and we have an approved request, mark it as completed
+          if (responseBody != "0" && ocrRequestStatus != null && ocrRequestStatus!['ocr_request_status'] == 'Approved') {
+            _markOcrRequestAsCompleted();
+          }
+
           _showResultDialog(message);
         } else {
           _showResultDialog('Server error: ${response.statusCode}');
@@ -843,5 +1009,160 @@ class _StudentOcrState extends State<StudentOcr> {
         ],
       ),
     );
+  }
+
+  Future<void> _checkOcrEligibility() async {
+    setState(() {
+      isLoadingEligibility = true;
+    });
+
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(
+        url,
+        body: {
+          'json': json.encode({"stud_active_id": widget.student_id}),
+          'operation': 'checkOcrEligibility',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            hasExistingOcr = data['has_existing_ocr'];
+            requiresApproval = data['requires_approval'];
+          });
+          
+          if (hasExistingOcr) {
+            _checkOcrRequestStatus();
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking OCR eligibility: $e');
+    } finally {
+      setState(() {
+        isLoadingEligibility = false;
+      });
+    }
+  }
+
+  Future<void> _checkOcrRequestStatus() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(
+        url,
+        body: {
+          'json': json.encode({"stud_active_id": widget.student_id}),
+          'operation': 'getOcrRequestStatus',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            ocrRequestStatus = data['request'];
+          });
+        }
+      }
+    } catch (e) {
+      print('Error checking OCR request status: $e');
+    }
+  }
+
+  Future<void> _createOcrRequest() async {
+    final reasonController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("OCR Request"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("You already have an existing OCR schedule. To upload a new one, you need admin approval."),
+            SizedBox(height: 16),
+            TextField(
+              decoration: InputDecoration(
+                labelText: "Reason for new OCR upload",
+                hintText: "Please explain why you need to update your schedule",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              controller: reasonController,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _submitOcrRequest(reasonController.text);
+            },
+            child: Text("Submit Request"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitOcrRequest(String reason) async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(
+        url,
+        body: {
+          'json': json.encode({
+            "stud_active_id": widget.student_id,
+            "reason": reason.isNotEmpty ? reason : "Request to update OCR schedule"
+          }),
+          'operation': 'createOcrRequest',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data['success'] == true) {
+          _showResultDialog(data['message']);
+          _checkOcrRequestStatus(); // Refresh request status
+        } else {
+          _showResultDialog(data['error'] ?? 'Failed to submit request');
+        }
+      }
+    } catch (e) {
+      print('Error submitting OCR request: $e');
+      _showResultDialog('Network error occurred.');
+    }
+  }
+
+  Future<void> _markOcrRequestAsCompleted() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(
+        url,
+        body: {
+          'json': json.encode({
+            "request_id": ocrRequestStatus!['ocr_request_id']
+          }),
+          'operation': 'completeOcrRequest',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data['success'] == true) {
+          // Refresh the request status
+          _checkOcrRequestStatus();
+        }
+      }
+    } catch (e) {
+      print('Error marking OCR request as completed: $e');
+    }
   }
 }

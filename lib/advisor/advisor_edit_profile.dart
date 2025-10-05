@@ -23,31 +23,24 @@ class AdvisorEditProfileSheet extends StatefulWidget {
 
 class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
   int remainingTime = 5; // 5 minutes in seconds
-  String contactNumber = '';
   String email = '';
+  String fullName = '';
   int authenticationStatus = 0;
   String currentPassword = '';
   bool isButtonDisabled = false;
   bool isTwoFactorEnabled = false; // Track the state of the switch
-  // Define TextEditingControllers for each field
-  late TextEditingController contactNumberController;
-  late TextEditingController emailController;
+  List<dynamic> assignments = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the controllers
-    contactNumberController = TextEditingController(text: contactNumber);
-    emailController = TextEditingController(text: email);
-    // passwordController = TextEditingController(text: "password123");
-    getStudentProfile();
+    getSupervisorProfile();
+    getSupervisorAssignments();
   }
 
   @override
   void dispose() {
-    // Clean up the controllers when the widget is disposed
-    contactNumberController.dispose();
-    emailController.dispose();
     super.dispose(); // Always cancel the timer when the widget is disposed
   }
 
@@ -58,132 +51,225 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
     return ShadSheet(
       constraints: widget.side == ShadSheetSide.left ||
               widget.side == ShadSheetSide.right
-          ? const BoxConstraints(maxWidth: 400) // Adjusted for mobile
+          ? const BoxConstraints(maxWidth: 500) // Increased for more content
           : null,
-      title: const Text('Edit Profile'),
+      title: const Text('Supervisor Profile'),
       description: const Text(
-          "Make changes to your profile here. Click save when you're done."),
+          "View your complete profile information and current assignments."),
       actions: [
         ShadButton(
-          child: const Text('Save changes'),
+          child: const Text('Close'),
           onPressed: () {
-            updateAdvisorProfile();
             Navigator.pop(context);
           },
         ),
       ],
-      child: SingleChildScrollView(
-        // Added scroll view for better handling of the keyboard
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 8), // Reduced padding for mobile
+      child: isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Align the text to the left
+                crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Contact Number Input
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+                  // Profile Information Section
+                  _buildInfoSection(
+                    "Profile Information",
+                    Icons.person,
+                    [
+                      _buildInfoRow("Full Name", fullName.isNotEmpty ? fullName : 'Not available'),
+                      _buildInfoRow("Email Address", email.isNotEmpty ? email : 'Not available'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Current Assignments Section
+                  _buildInfoSection(
+                    "Current Assignments",
+                    Icons.assignment,
+                    assignments.isEmpty
+                        ? [
+                            _buildInfoRow("Status", "No current assignments", isHighlight: true),
+                          ]
+                        : assignments.map((assignment) => _buildAssignmentInfo(assignment)).toList(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Security Settings Section
+                  _buildInfoSection(
+                    "Security Settings",
+                    Icons.security,
+                    [
+                      _buildInfoRow("Two-Factor Authentication", 
+                          authenticationStatus == 1 ? "Enabled" : "Disabled", 
+                          isHighlight: authenticationStatus == 1),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Action Buttons
+                  Row(
+                children: [
+                      Expanded(
+                        child: ShadButton(
+                          child: const Text('Change Password'),
+                          onPressed: () {
+                            _showOtpDialog(isForPasswordChange: true);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ShadButton(
+                          child: Text(authenticationStatus == 1 ? 'Disable 2FA' : 'Enable 2FA'),
+                          onPressed: () {
+                            if (authenticationStatus == 1) {
+                              _showOtpDialog(isForPasswordChange: false, isForDisabling2FA: true);
+                            } else {
+                              _showOtpDialog(isForPasswordChange: false);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildInfoSection(String title, IconData icon, List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Aligning the text to the left
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
                 children: [
+              Icon(icon, size: 20, color: Colors.grey.shade700),
+              const SizedBox(width: 8),
                   Text(
-                    "Contact Number",
-                    style: theme.textTheme.small,
-                  ),
-                  const SizedBox(height: 8), // Space between label and input
-                  ShadInput(controller: contactNumberController),
-                ],
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-
-            // Email Input
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Aligning the text to the left
-                children: [
-                  Text(
-                    "Email",
-                    style: theme.textTheme.small,
-                  ),
-                  const SizedBox(height: 8), // Space between label and input
-                  ShadInput(controller: emailController),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Shortened text with a smaller font and overflow handling
-                  Flexible(
-                    child: Text(
-                      "Enable 2FA", // Shortened text
-                      style: theme.textTheme.small,
-                      overflow: TextOverflow
-                          .ellipsis, // Handle overflow with ellipsis
-                    ),
-                  ),
-                  // Using ShadSwitch
-                  ShadSwitch(
-                    value: authenticationStatus ==
-                        1, // Switch is on when authenticationStatus is 1
-                    onChanged: (bool v) {
-                      setState(() {
-                        // Set the authenticationStatus based on the switch state
-                        authenticationStatus =
-                            v ? 1 : 0; // Update authenticationStatus to 1 or 0
-
-                        // Update the isTwoFactorEnabled flag accordingly
-                        isTwoFactorEnabled = v;
-                      });
-
-                      if (v) {
-                        // If 2FA is turned on, show OTP dialog for verification
-                        _showOtpDialog(
-                            isForPasswordChange:
-                                false); // Pass false for enabling 2FA
-                      } else {
-                        // If 2FA is turned off, show OTP dialog and verify OTP before disabling 2FA
-                        _showOtpDialog(
-                            isForPasswordChange: false,
-                            isForDisabling2FA:
-                                true); // Pass true for disabling 2FA
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: ShadButton(
-                child: const Text('Change Password'),
-                onPressed: () {
-                  // Show OTP dialog before changing password
-                  _showOtpDialog(
-                      isForPasswordChange:
-                          true); // Pass flag to indicate it's for password change
-                },
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
       ),
     );
   }
 
-  void getStudentProfile() async {
+  Widget _buildInfoRow(String label, String value, {bool isHighlight = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+          Expanded(
+                    child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: isHighlight ? Colors.green.shade700 : Colors.black87,
+                fontWeight: isHighlight ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+                  ),
+                ],
+              ),
+    );
+  }
+
+  Widget _buildAssignmentInfo(Map<String, dynamic> assignment) {
+    String assignmentType = assignment['assignment_name']?.toString() ?? 'Unknown';
+    bool isOffice = assignmentType == 'Office';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isOffice ? Colors.blue.shade50 : Colors.green.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isOffice ? Colors.blue.shade200 : Colors.green.shade200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isOffice ? Icons.business : Icons.school,
+                color: isOffice ? Colors.blue.shade700 : Colors.green.shade700,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                assignmentType,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isOffice ? Colors.blue.shade700 : Colors.green.shade700,
+              ),
+            ),
+          ],
+        ),
+          const SizedBox(height: 6),
+          if (isOffice) ...[
+            _buildInfoRow('Department', assignment['dept_name']?.toString() ?? 'N/A'),
+            _buildInfoRow('Building', assignment['build_name']?.toString() ?? 'N/A'),
+          ] else ...[
+            _buildInfoRow('Subject', assignment['sub_code']?.toString() ?? 'N/A'),
+            _buildInfoRow('Title', assignment['sub_descriptive_title']?.toString() ?? 'N/A'),
+            _buildInfoRow('Section', assignment['sub_section']?.toString() ?? 'N/A'),
+            _buildInfoRow('Time', assignment['sub_time']?.toString() ?? 'N/A'),
+            _buildInfoRow('Room', assignment['sub_room']?.toString() ?? 'N/A'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void getSupervisorProfile() async {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "supM_id": widget.advisor_id,
+        "supM_email": widget.advisor_id,
       };
       Map<String, String> requestBody = {
         "operation": "getSupervisorProfile",
@@ -191,19 +277,35 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
       };
 
       var response = await http.post(url, body: requestBody);
+      print("API Response Status: ${response.statusCode}");
+      print("API Response Body: ${response.body}");
+      
       var res = jsonDecode(response.body);
-      if (res != 0) {
-        print(res);
+      print("Parsed Response: $res");
+      
+      if (res is Map && res['success'] == true && res['data'] != null) {
+        print("Success response with data, processing...");
+        var data = res['data'];
         if (mounted) {
-          // Check if the widget is still mounted
           setState(() {
-            contactNumberController.text = res['supM_contactNumber'] ?? 'NULL';
-            emailController.text = res['supM_email'] ?? 'NULL';
-            currentPassword =
-                res['supM_password'] ?? ''; // Save current password
-            authenticationStatus = res['supM_authentication_status'];
+            // Basic profile information - only name and email
+            fullName = data['supM_name']?.toString() ?? '';
+            email = data['supM_email']?.toString() ?? '';
+            currentPassword = data['supM_password']?.toString() ?? ''; // Save current password
+            
+            // Security information
+            authenticationStatus = data['supM_authentication_status'] is int ? data['supM_authentication_status'] : int.tryParse(data['supM_authentication_status']?.toString() ?? '0') ?? 0;
+            
+            isLoading = false;
           });
-          print(authenticationStatus);
+          print("Set state completed. Full Name: $fullName, Email: $email");
+        }
+      } else {
+        print("No data found or error in response");
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
         }
       }
     } catch (e) {
@@ -211,50 +313,71 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
     }
   }
 
-  void updateAdvisorProfile() async {
+  void getSupervisorAssignments() async {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       Map<String, dynamic> jsonData = {
-        "supM_id": widget.advisor_id,
-        // "stud_contactNumber": contactNumberController.text,
-        "supM_email": emailController.text,
+        "supM_email": widget.advisor_id,
       };
       Map<String, String> requestBody = {
-        "operation": "updateAdvisorProfile",
+        "operation": "getAssignedScholars",
         "json": jsonEncode(jsonData),
       };
 
       var response = await http.post(url, body: requestBody);
-
-      // Check if the response is valid JSON
+      print("Assignments API Response Status: ${response.statusCode}");
+      print("Assignments API Response Body: ${response.body}");
+      
       if (response.statusCode == 200) {
-        try {
-          var res = jsonDecode(response.body);
-          if (res != 0) {
-            Get.snackbar(
-              "Success",
-              "Profile updated successfully",
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          }
-        } catch (e) {
-          print("Error parsing response as JSON: $e");
+        var res = jsonDecode(response.body);
+        print("Raw assignments data: $res");
+        
+        if (mounted) {
+          setState(() {
+            if (res != 0) {
+              print("Total assignments before deduplication: ${res.length}");
+              
+              // Remove duplicates based on unique combination of assignment details
+              List<dynamic> uniqueAssignments = [];
+              Set<String> seenAssignments = {};
+              
+              for (var assignment in res) {
+                // Create a unique key based on assignment details
+                String uniqueKey = "${assignment['assignment_name']}_${assignment['dept_name']}_${assignment['build_name']}_${assignment['dutyH_name']}";
+                print("Assignment key: $uniqueKey");
+                
+                if (!seenAssignments.contains(uniqueKey)) {
+                  seenAssignments.add(uniqueKey);
+                  uniqueAssignments.add(assignment);
+                } else {
+                  print("Duplicate assignment found: $uniqueKey");
+                }
+              }
+              
+              print("Unique assignments after deduplication: ${uniqueAssignments.length}");
+              assignments = uniqueAssignments;
+            } else {
+              assignments = [];
+            }
+          });
         }
-      } else {
-        print("Error: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error: $e");
+      print("Error fetching supervisor assignments: $e");
+      if (mounted) {
+        setState(() {
+          assignments = [];
+        });
+      }
     }
   }
+
 
   void _showOtpDialog(
       {bool isForPasswordChange = false, bool isForDisabling2FA = false}) {
     final otpController = TextEditingController(); // OTP input controller
     String generatedOtp = ''; // Store generated OTP
-    String emailToSendOtp = emailController.text; // Email for OTP
+    String emailToSendOtp = email; // Email for OTP
     bool isOtpSent = false; // Track if OTP is sent
 
     // Function to generate a random OTP
@@ -673,8 +796,8 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
 
       Map<String, dynamic> jsonData = {
-        "stud_id": widget.advisor_id,
-        "stud_authentication_status": 0,
+        "supM_id": widget.advisor_id,
+        "supM_authentication_status": 0,
       };
 
       Map<String, String> requestBody = {

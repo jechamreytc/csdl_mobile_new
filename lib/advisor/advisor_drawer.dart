@@ -21,12 +21,9 @@ class AdvisorDrawer extends StatefulWidget {
 }
 
 class _AdvisorDrawerState extends State<AdvisorDrawer> {
-  late int selectedIndex;
-
   @override
   void initState() {
     super.initState();
-    selectedIndex = widget.currentIndex; // Initialize with current screen
   }
 
   @override
@@ -38,12 +35,11 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
         children: [
           DrawerHeader(
             decoration: const BoxDecoration(color: Color(0xFF0F172A)),
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  top: 10,
-                  child: Container(
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
                     width: 60,
                     height: 60,
                     decoration: const BoxDecoration(
@@ -55,12 +51,10 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
                       ),
                     ),
                   ),
-                ),
-                const Positioned(
-                  left: 80,
-                  top: 10,
-                  child: Column(
+                  const SizedBox(width: 16),
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("HK SMS",
                           style: TextStyle(
@@ -73,20 +67,8 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
                           style: TextStyle(color: Colors.white, fontSize: 12)),
                     ],
                   ),
-                ),
-                const Positioned(
-                  left: 0,
-                  top: 120,
-                  child: Text(
-                    "DRAWER",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -95,7 +77,6 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
             icon: Icons.dashboard,
             label: "Dashboard",
             onTap: () {
-              setState(() => selectedIndex = 0);
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -114,7 +95,6 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
             icon: Icons.list,
             label: "Assigned Scholar",
             onTap: () {
-              setState(() => selectedIndex = 1);
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -133,7 +113,6 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
             icon: Icons.qr_code_scanner,
             label: "QR Scanner",
             onTap: () {
-              setState(() => selectedIndex = 2);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -149,7 +128,6 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
             icon: Icons.qr_code_scanner,
             label: "Student Adjustment",
             onTap: () {
-              setState(() => selectedIndex = 3);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -168,7 +146,6 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
             icon: Icons.settings,
             label: "Account Settings",
             onTap: () {
-              setState(() => selectedIndex = 4);
               Navigator.pop(context);
               showShadSheet(
                 side: ShadSheetSide.right,
@@ -205,7 +182,7 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
     required VoidCallback onTap,
     Color iconColor = Colors.white,
   }) {
-    final isSelected = selectedIndex == index;
+    final isSelected = widget.currentIndex == index;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

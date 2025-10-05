@@ -5,6 +5,8 @@ class SessionStorage {
 
   // static const String url = "http://192.168.1.10/finalhk/api/";
 
+    // static const String url = "https://coc-studentinfo.net/csdl/hksms/api/";
+
   static void setItem(String key, String value) {
     html.window.localStorage[key] = value;
   }

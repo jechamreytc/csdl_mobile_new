@@ -25,7 +25,7 @@ class EntryPoint extends StatelessWidget {
     } else if (advisorId != null) {
       return Advisor(
         advisor_id: advisorId,
-        supervisor_id: "",
+        supervisor_id: advisorId, // Use advisor_id as supervisor_id for advisors
       );
     } else if (adminId != null) {
       return MarketingDashboard(adminEmail: adminId);

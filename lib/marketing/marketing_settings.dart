@@ -71,9 +71,9 @@ class _MarketingSettingsState extends State<MarketingSettings> {
             adminName = data['adm_name'] ?? '';
             adminEmail = data['adm_email'] ?? '';
             adminId = data['adm_id'].toString();
-            contactNumber = data['adm_contactNumber'] ?? 'N/A';
+            // contactNumber = data['adm_contactNumber'] ?? 'N/A';
             email = data['adm_email'] ?? 'N/A';
-            contactNumberController.text = contactNumber;
+            // contactNumberController.text = contactNumber;
             emailController.text = email;
             currentPassword = data['adm_password'] ?? '';
             authenticationStatus = data['adm_authentication_status'] ?? 0;
@@ -190,8 +190,8 @@ class _MarketingSettingsState extends State<MarketingSettings> {
                             _buildProfileInfo("Email", adminEmail),
                             const SizedBox(height: 16),
                             _buildProfileInfo("ID", adminId),
-                            const SizedBox(height: 16),
-                            _buildProfileInfo("Contact Number", contactNumber),
+                            // const SizedBox(height: 16),
+                            // _buildProfileInfo("Contact Number", contactNumber),
                           ],
                         ),
                       ),
