@@ -3,7 +3,7 @@
 class SessionStorage {
   // static const String url = "http://localhost/finalhk/api/";
 
-  // static const String url = "http://192.168.1.146/finalhk/api/";
+  // static const String url = "http://192.168.1.10/finalhk/api/";
 
   static const String url = "https://coc-studentinfo.net/csdl/hksms/api/";
 
