@@ -1,11 +1,11 @@
 {
-    "name": "csdl_mobile",
-    "short_name": "csdl_mobile",
+    "name": "CSDL Mobile",
+    "short_name": "CSDL",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#104038",
+    "theme_color": "#104038",
+    "description": "Center for Student Development and Leadership - PHINMA Cagayan de Oro College",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

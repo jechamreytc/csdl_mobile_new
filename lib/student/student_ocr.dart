@@ -1,9 +1,10 @@
-import 'package:csdl_mobile/student/student_drawer.dart';
+﻿import 'package:csdl_mobile/student/student_drawer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
 import 'package:csdl_mobile/student/student_job_type.dart';
+import 'package:csdl_mobile/student/student_dashboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -27,11 +28,16 @@ class _StudentOcrState extends State<StudentOcr> {
   bool requiresApproval = false;
   Map<String, dynamic>? ocrRequestStatus;
   bool isLoadingEligibility = false;
+  
+  // Cross-system validation variables
+  int? jobTypeStatus;
+  bool canUploadOcr = true;
 
   @override
   void initState() {
     super.initState();
     _checkOcrEligibility();
+    _checkJobTypeStatus(); // Check job type status for cross-validation
   }
 
   @override
@@ -227,7 +233,60 @@ class _StudentOcrState extends State<StudentOcr> {
                         ),
                         const SizedBox(height: 16),
                       ],
-                      if (ocrRequestStatus == null || ocrRequestStatus!['ocr_request_status'] == 'Declined' || ocrRequestStatus!['ocr_request_status'] == 'Completed') ...[
+                      if (ocrRequestStatus != null && ocrRequestStatus!['ocr_request_status'] == 'Pending') ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.orange.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.hourglass_empty, color: Colors.orange.shade600),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Request Pending",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange.shade800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Your OCR upload request is pending admin approval. Please wait for the decision.",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.orange.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (ocrRequestStatus != null && ocrRequestStatus!['ocr_request_status'] == 'Approved') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.upload_file),
+                          label: const Text('Upload PDF'),
+                          onPressed: _pickPDFText,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ] else if (ocrRequestStatus != null && ocrRequestStatus!['ocr_request_status'] == 'Completed') ...[
+                        // Show Request button for completed requests
                         ElevatedButton.icon(
                           icon: const Icon(Icons.request_page),
                           label: const Text('Request OCR Upload'),
@@ -241,13 +300,14 @@ class _StudentOcrState extends State<StudentOcr> {
                             ),
                           ),
                         ),
-                      ] else if (ocrRequestStatus!['ocr_request_status'] == 'Approved') ...[
+                      ] else ...[
+                        // Show Request button when no request or declined
                         ElevatedButton.icon(
-                          icon: const Icon(Icons.upload_file),
-                          label: const Text('Upload PDF'),
-                          onPressed: _pickPDFText,
+                          icon: const Icon(Icons.request_page),
+                          label: const Text('Request OCR Upload'),
+                          onPressed: _createOcrRequest,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
+                            backgroundColor: Colors.orange.shade600,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -340,151 +400,7 @@ class _StudentOcrState extends State<StudentOcr> {
                 ),
               ],
 
-              // Display extracted info
-              if (studentNumber != null && schoolYear != null) ...[
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.green.shade200, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade600, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Document Information",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.green.shade100, width: 1),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.person, color: Colors.green.shade600, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Student Number: $studentNumber',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.calendar_today, color: Colors.green.shade600, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'School Year: $schoolYear',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
 
-              // Schedule table
-              if (scheduleData.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.orange.shade200, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.schedule, color: Colors.orange.shade600, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Your Available Schedule",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.orange.shade100, width: 1),
-                        ),
-                        child: DataTable(
-                          columns: [
-                            DataColumn(
-                              label: Text(
-                                'Day',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'From',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'To',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                          rows: _generateDataTableRows(),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
 
               // Raw text fallback
               if (extractedText != null && scheduleData.isEmpty) ...[
@@ -526,60 +442,6 @@ class _StudentOcrState extends State<StudentOcr> {
                 ),
               ],
 
-              // Save button
-              if (scheduleData.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.purple.shade50,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.purple.shade200, width: 1),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.save, color: Colors.purple.shade600, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Ready to Save",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.purple.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "Your schedule has been extracted successfully. Click the button below to save your duty schedule.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.purple.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.save),
-                        label: const Text('Save Schedule'),
-                        onPressed: _saveScheduleData,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
 
               // SBO/Working Student Portal Section (moved to bottom)
               const SizedBox(height: 24),
@@ -629,13 +491,7 @@ class _StudentOcrState extends State<StudentOcr> {
                       icon: const Icon(Icons.assignment),
                       label: const Text("SBO/Working Student Portal"),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                StudentJobType(student_id: widget.student_id),
-                          ),
-                        );
+                        _checkJobTypeAccess();
                       },
                     ),
                     const SizedBox(height: 12),
@@ -665,7 +521,7 @@ class _StudentOcrState extends State<StudentOcr> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            "• SBO (Student Body Organization): For students involved in student government and campus leadership activities\n• Working Student: For students have woks outside and inside the campus ",
+                            "â€¢ SBO (Student Body Organization): For students involved in student government and campus leadership activities\nâ€¢ Working Student: For students have woks outside and inside the campus ",
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.amber.shade600,
@@ -693,9 +549,43 @@ class _StudentOcrState extends State<StudentOcr> {
         rows.add(
           DataRow(
             cells: [
-              DataCell(Text(day)),
-              DataCell(Text(timeRange['from'] ?? '')),
-              DataCell(Text(timeRange['to'] ?? '')),
+              DataCell(
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  child: Text(
+                    day,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue.shade700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DataCell(
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  child: Text(
+                    timeRange['from'] ?? '',
+                    style: TextStyle(
+                      color: Colors.blue.shade600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DataCell(
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  child: Text(
+                    timeRange['to'] ?? '',
+                    style: TextStyle(
+                      color: Colors.blue.shade600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -744,6 +634,7 @@ class _StudentOcrState extends State<StudentOcr> {
 
     if (studentNumberMatch != null && schoolYearMatch != null) {
       String extractedStudentNumber = studentNumberMatch.group(1)!;
+      String extractedSchoolYear = 'SY ${schoolYearMatch.group(1)} SEM ${schoolYearMatch.group(2)}';
 
       if (extractedStudentNumber != widget.student_id) {
         showDialog(
@@ -771,22 +662,147 @@ class _StudentOcrState extends State<StudentOcr> {
         return; // stop here
       }
 
-      setState(() {
-        studentNumber = extractedStudentNumber;
-        schoolYear =
-            'SY ${schoolYearMatch.group(1)} SEM ${schoolYearMatch.group(2)}';
-      });
-
-      print('Student Number: $studentNumber');
-      print('School Year: $schoolYear');
-
-      _extractVacantSchedule(text);
+      // Validate academic session
+      _validateAcademicSession(extractedSchoolYear, extractedStudentNumber, text);
     } else {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: Text("Invalid File"),
           content: Text("Student number or academic session not found."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  studentNumber = null;
+                  schoolYear = null;
+                  extractedText = null;
+                  scheduleData.clear();
+                });
+              },
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _validateAcademicSession(String extractedSchoolYear, String extractedStudentNumber, String text) async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      var response = await http.post(
+        url,
+        body: {
+          'json': json.encode({}),
+          'operation': 'getCurrentAcademicSession',
+        },
+      );
+
+      print('ðŸ” Academic Session Validation:');
+      print('ðŸ“Š PDF Academic Session: $extractedSchoolYear');
+      print('ðŸ“¡ Response Code: ${response.statusCode}');
+      print('ðŸ“¡ Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        print('ðŸ“Š Current Academic Session Data: $data');
+        
+        if (data['success'] == true) {
+          String currentSessionName = data['session']['session_name'];
+          print('ðŸ“‹ Current Active Session: $currentSessionName');
+          print('ðŸ“‹ PDF Session: $extractedSchoolYear');
+          
+          if (extractedSchoolYear == currentSessionName) {
+            print('âœ… Academic Session Match - Proceeding with upload');
+            setState(() {
+              studentNumber = extractedStudentNumber;
+              schoolYear = extractedSchoolYear;
+            });
+            print('Student Number: $studentNumber');
+            print('School Year: $schoolYear');
+            _extractVacantSchedule(text);
+          } else {
+            print('âŒ Academic Session Mismatch - Showing alert');
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: Text("Academic Session Mismatch"),
+                content: Text(
+                    "The academic session in the PDF ($extractedSchoolYear) does not match the current active academic session ($currentSessionName). Please upload an ORF from the current academic session."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        studentNumber = null;
+                        schoolYear = null;
+                        extractedText = null;
+                        scheduleData.clear();
+                      });
+                    },
+                    child: Text("OK"),
+                  ),
+                ],
+              ),
+            );
+          }
+        } else {
+          print('âŒ Failed to get current academic session: ${data['error']}');
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text("Session Validation Error"),
+              content: Text("Unable to validate academic session. Please try again."),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      studentNumber = null;
+                      schoolYear = null;
+                      extractedText = null;
+                      scheduleData.clear();
+                    });
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        print('âŒ Server error: ${response.statusCode}');
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Server Error"),
+            content: Text("Unable to validate academic session. Please try again."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  setState(() {
+                    studentNumber = null;
+                    schoolYear = null;
+                    extractedText = null;
+                    scheduleData.clear();
+                  });
+                },
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print('âŒ Error validating academic session: $e');
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text("Validation Error"),
+          content: Text("Network error occurred while validating academic session."),
           actions: [
             TextButton(
               onPressed: () {
@@ -852,6 +868,223 @@ class _StudentOcrState extends State<StudentOcr> {
     setState(() {
       scheduleData = availableTimes;
     });
+    
+    // Automatically show schedule dialog after extraction
+    if (availableTimes.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _showScheduleDialog();
+        }
+      });
+    }
+  }
+
+  void _showScheduleDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.schedule, color: Colors.blue.shade600),
+              const SizedBox(width: 8),
+              Text(
+                "Your Available Schedule",
+                style: TextStyle(
+                  color: Colors.blue.shade800,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            width: double.maxFinite,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Document Information
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.shade200, width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Document Information",
+                              style: TextStyle(
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.shade100, width: 1),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.person, color: Colors.green.shade600, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Student Number: $studentNumber',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.green.shade700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today, color: Colors.green.shade600, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'School Year: $schoolYear',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.green.shade700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Success message
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule, color: Colors.blue.shade600, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Schedule extracted successfully!",
+                            style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Schedule table
+                  DataTable(
+                    columnSpacing: 20,
+                    horizontalMargin: 16,
+                    columns: [
+                      DataColumn(
+                        label: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'Day',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'From',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'To',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    rows: _generateDataTableRows(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                "Close",
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.save, size: 18),
+              label: const Text('Save Schedule'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _saveScheduleData();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   List<String> _getAvailableTimes(List<String> unavailableTimes) {
@@ -1012,6 +1245,7 @@ class _StudentOcrState extends State<StudentOcr> {
   }
 
   Future<void> _checkOcrEligibility() async {
+    print('ðŸ” Checking OCR Eligibility...');
     setState(() {
       isLoadingEligibility = true;
     });
@@ -1026,21 +1260,40 @@ class _StudentOcrState extends State<StudentOcr> {
         },
       );
 
+      print('ðŸ“¡ OCR Eligibility Response Code: ${response.statusCode}');
+      print('ðŸ“¡ OCR Eligibility Response: ${response.body}');
+
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
+        print('ðŸ“Š Parsed OCR Eligibility Data: $data');
+        
         if (data['success'] == true) {
+          print('âœ… OCR Eligibility Check Success');
+          print('ðŸ“‹ Has Existing OCR: ${data['has_existing_ocr']}');
+          print('ðŸ“‹ Requires Approval: ${data['requires_approval']}');
+          
           setState(() {
             hasExistingOcr = data['has_existing_ocr'];
             requiresApproval = data['requires_approval'];
           });
           
           if (hasExistingOcr) {
-            _checkOcrRequestStatus();
+            print('ðŸ“‹ Existing OCR found - checking request status');
+            await _checkOcrRequestStatus();
+            // Show appropriate blocking alert based on request status
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              print('ðŸš¨ Showing blocking alert based on request status');
+              _showOcrAccessAlert();
+            });
+          } else {
+            print('ðŸ“‹ No existing OCR - user can upload directly');
           }
+        } else {
+          print('âŒ OCR Eligibility Check Failed: ${data['error']}');
         }
       }
     } catch (e) {
-      print('Error checking OCR eligibility: $e');
+      print('âŒ Error checking OCR eligibility: $e');
     } finally {
       setState(() {
         isLoadingEligibility = false;
@@ -1048,7 +1301,494 @@ class _StudentOcrState extends State<StudentOcr> {
     }
   }
 
+  /// Check job type status for cross-system validation
+  Future<void> _checkJobTypeStatus() async {
+    try {
+      final url = Uri.parse("${SessionStorage.url}transaction.php");
+      final response = await http.post(
+        url,
+        body: {
+          'operation': 'getJobType',
+          'json': jsonEncode({"job_stud_id": widget.student_id}),
+        },
+      );
+
+      print("ðŸ” Job Type Status Check for OCR:");
+      print("ðŸ“Š Response: ${response.body}");
+
+      final data = jsonDecode(response.body);
+      
+      // Handle both List and Map responses
+      var existingData;
+      if (data != null && data is List && data.isNotEmpty) {
+        existingData = data.first;
+        print("ðŸ“‹ Found job type data in List format");
+      } else if (data != null && data is Map && data.isNotEmpty) {
+        existingData = data;
+        print("ðŸ“‹ Found job type data in Map format");
+      } else {
+        existingData = null;
+        print("ðŸ“‹ No job type data found");
+      }
+      
+      if (existingData != null) {
+        int status = int.tryParse(existingData['job_status']?.toString() ?? '0') ?? 0;
+        print("ðŸ“Š Job Type Status: $status");
+        
+        setState(() {
+          jobTypeStatus = status;
+          // Block OCR upload if job type is pending (0) or approved (1), but allow if declined (2)
+          canUploadOcr = !(status == 0 || status == 1);
+        });
+        
+        // Show job type alerts immediately when OCR page loads
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (status == 0) {
+            print('ðŸš¨ JOB TYPE BLOCKING: Pending status - show alert on OCR page load');
+            _showJobTypePendingAlert();
+          } else if (status == 1) {
+            print('ðŸš¨ JOB TYPE BLOCKING: Approved status - show alert on OCR page load');
+            _showJobTypeApprovedAlert();
+          } else if (status == 2) {
+            print('ðŸ“‹ JOB TYPE DECLINED: Show remarks notification but allow access');
+            _showJobTypeDeclinedNotification();
+          }
+        });
+      } else {
+        setState(() {
+          jobTypeStatus = -1; // no job type upload
+          canUploadOcr = true;
+        });
+      }
+    } catch (e) {
+      print('âŒ Error checking job type status: $e');
+      setState(() {
+        jobTypeStatus = -1;
+        canUploadOcr = true;
+      });
+    }
+  }
+
+  /// Show alert when job type status blocks OCR upload
+  void _showJobTypeBlockingAlert(int status) {
+    String title = status == 0 ? "Job Type Upload Pending" : status == 1 ? "Job Type Upload Approved" : "Job Type Upload Declined";
+    String message = status == 0 
+        ? "You have a pending job type upload. Please wait for admin approval before uploading OCR."
+        : status == 1
+            ? "Your job type upload has been approved. You cannot upload OCR until the next session."
+            : "Your job type upload was declined. You cannot upload OCR until the next session.";
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  /// Show alert dialog with request button when existing data is found
+  void _showExistingDataAlert() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Existing Data Found"),
+          content: const Text("You have existing OCR or job type data. Please use the request button below to request a new upload."),
+          actions: [
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _createOcrRequest();
+              },
+              icon: const Icon(Icons.request_page),
+              label: const Text('Request OCR Upload'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade600,
+                foregroundColor: Colors.white,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("Go to Dashboard"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show OCR access alert based on request status and job type status
+  void _showOcrAccessAlert() {
+    print('ðŸ” OCR Access Alert Check:');
+    print('ðŸ“Š OCR Request Status: $ocrRequestStatus');
+    print('ðŸ“Š Job Type Status: $jobTypeStatus');
+    
+    // Check for job type blocking first
+    if (jobTypeStatus != null && jobTypeStatus != -1) {
+      if (jobTypeStatus == 0) {
+        print('ðŸš¨ JOB TYPE BLOCKING: Pending status');
+        _showJobTypePendingAlert();
+        return;
+      } else if (jobTypeStatus == 1) {
+        print('ðŸš¨ JOB TYPE BLOCKING: Approved status');
+        _showJobTypeApprovedAlert();
+        return;
+      } else if (jobTypeStatus == 2) {
+        print('ðŸ“‹ JOB TYPE DECLINED: Show remarks notification');
+        _showJobTypeDeclinedAlert();
+        // Continue to OCR checks after showing declined notification
+      }
+    }
+    
+    // Check OCR request status
+    if (ocrRequestStatus != null) {
+      String status = ocrRequestStatus!['ocr_request_status'] ?? '';
+      print('ðŸ“‹ Request Status: $status');
+      
+      if (status.toLowerCase() == 'pending') {
+        print('â³ Pending request - showing blocking alert dialog');
+        print('ðŸš¨ BLOCKING: User cannot access OCR module until approved');
+        // Show blocking alert dialog for pending requests
+        _showPendingRequestAlert();
+        return;
+      } else if (status.toLowerCase() == 'approved') {
+        print('âœ… Approved request - allowing upload access');
+        print('ðŸŽ¯ UNBLOCKED: User can now upload ORF');
+        // Allow access for approved requests - user can upload
+        return;
+      } else if (status.toLowerCase() == 'completed') {
+        print('ðŸ”„ Completed request - showing request button for new request');
+        print('ðŸš¨ BLOCKING: User needs to submit new request');
+        // Show request alert for completed requests
+        _showExistingOcrAlert();
+        return;
+      } else if (status.toLowerCase() == 'declined') {
+        print('âŒ Declined request - showing request button for new request');
+        print('ðŸš¨ BLOCKING: User needs to submit new request');
+        // Show request alert for declined requests
+        _showExistingOcrAlert();
+        return;
+      }
+    }
+    
+    print('ðŸ“‹ No request status - showing OCR Schedule Exists alert');
+    print('ðŸš¨ BLOCKING: User needs to submit request first');
+    // Show "OCR Schedule Exists" alert if there's no request at all
+    _showExistingOcrAlert();
+  }
+
+  /// Show alert for existing OCR data with request option
+  void _showExistingOcrAlert() {
+    print('ðŸš¨ Showing OCR Schedule Exists blocking alert');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("OCR Schedule Exists"),
+          content: const Text("You already have an existing OCR schedule. To upload a new one, you need admin approval."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("Back"),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showRequestFormAlert();
+              },
+              icon: const Icon(Icons.request_page),
+              label: const Text('Request'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade600,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show pending request alert
+  void _showPendingRequestAlert() {
+    print('ðŸš¨ Showing Request Pending blocking alert');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Request Pending"),
+          content: const Text("Your OCR upload request is pending admin approval. You cannot upload documents until your request is approved."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("Go to Dashboard"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show job type pending alert
+  void _showJobTypePendingAlert() {
+    print('ðŸš¨ Showing Job Type Pending blocking alert');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Upload Pending"),
+          content: const Text("You already have a pending upload. Please wait for admin approval before uploading again."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show job type approved alert
+  void _showJobTypeApprovedAlert() {
+    print('ðŸš¨ Showing Job Type Approved blocking alert');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Upload Approved"),
+          content: const Text("Your upload has been approved. No further uploads are needed."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show job type declined alert with remarks
+  void _showJobTypeDeclinedAlert() {
+    print('ðŸ“‹ Showing Job Type Declined notification with remarks');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Job Type Declined"),
+          content: const Text("Your job type upload was declined by admin. You can see the reason below and upload a new job type if needed."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show job type declined notification (non-blocking)
+  void _showJobTypeDeclinedNotification() {
+    print('ðŸ“‹ Showing Job Type Declined notification (non-blocking)');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Job Type Declined"),
+          content: const Text("Your previous job type upload was declined by admin. You can upload a new job type with the required changes."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Don't navigate to dashboard - allow user to continue
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Check job type access and show appropriate alerts
+  void _checkJobTypeAccess() {
+    print('ðŸ” Checking Job Type Access...');
+    print('ðŸ“Š Job Type Status: $jobTypeStatus');
+    
+    if (jobTypeStatus != null && jobTypeStatus != -1) {
+      if (jobTypeStatus == 0) {
+        print('ðŸš¨ JOB TYPE BLOCKING: Pending status - show alert in OCR module');
+        _showJobTypePendingAlert();
+        return;
+      } else if (jobTypeStatus == 1) {
+        print('ðŸš¨ JOB TYPE BLOCKING: Approved status - show alert in OCR module');
+        _showJobTypeApprovedAlert();
+        return;
+      } else if (jobTypeStatus == 2) {
+        print('ðŸ“‹ JOB TYPE DECLINED: Show remarks notification but allow access');
+        _showJobTypeDeclinedNotification();
+        // Allow access to job type page after showing notification
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StudentJobType(student_id: widget.student_id),
+            ),
+          );
+        });
+        return;
+      }
+    }
+    
+    print('âœ… No job type restrictions - allowing access to job type');
+    // No job type restrictions, allow access
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StudentJobType(student_id: widget.student_id),
+      ),
+    );
+  }
+
+  /// Show request form in alert dialog
+  void _showRequestFormAlert() {
+    final reasonController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("OCR Upload Request"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Please provide a reason for your OCR upload request:"),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  hintText: "Enter reason for request...",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _submitOcrRequest(reasonController.text.isNotEmpty 
+                    ? reasonController.text 
+                    : "Request to update OCR schedule");
+                
+                // Navigate to drawer after submission
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("Submit Request"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _checkOcrRequestStatus() async {
+    print('ðŸ” Checking OCR Request Status...');
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
       var response = await http.post(
@@ -1059,17 +1799,96 @@ class _StudentOcrState extends State<StudentOcr> {
         },
       );
 
+      print('ðŸ“¡ OCR Request Status Response Code: ${response.statusCode}');
+      print('ðŸ“¡ OCR Request Status Response: ${response.body}');
+
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
+        print('ðŸ“Š Parsed OCR Request Data: $data');
+        
         if (data['success'] == true) {
+          print('âœ… OCR Request Status Found: ${data['request']}');
           setState(() {
             ocrRequestStatus = data['request'];
           });
+          
+          // Don't show blocking alerts - let user see the request button
+          // The request status will be displayed in the UI instead
+        } else {
+          print('âŒ OCR Request Status Failed: ${data['error']}');
         }
       }
     } catch (e) {
-      print('Error checking OCR request status: $e');
+      print('âŒ Error checking OCR request status: $e');
     }
+  }
+
+  /// Show alert based on OCR request status
+  void _showRequestStatusAlert(String status) {
+    String title = '';
+    String message = '';
+    bool canProceed = false;
+    
+    switch (status.toLowerCase()) {
+      case 'pending':
+        title = "Request Pending";
+        message = "Your OCR upload request is pending admin approval. Please wait for the decision.";
+        canProceed = false;
+        break;
+      case 'approved':
+        title = "Request Approved";
+        message = "Your OCR upload request has been approved. You can now upload your documents.";
+        canProceed = true;
+        break;
+      case 'declined':
+        title = "Request Declined";
+        message = "Your OCR upload request was declined. You can submit a new request.";
+        canProceed = true;
+        break;
+      case 'completed':
+        title = "Request Completed";
+        message = "Your OCR upload request has been completed. You can submit a new request if needed.";
+        canProceed = true;
+        break;
+      default:
+        title = "Request Status Unknown";
+        message = "Unable to determine your request status. Please contact support.";
+        canProceed = false;
+    }
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            if (canProceed) ...[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Allow user to proceed with upload or new request
+                },
+                child: const Text("Continue"),
+              ),
+            ],
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentDashboard(student_id: widget.student_id),
+                  ),
+                );
+              },
+              child: const Text("Go to Dashboard"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _createOcrRequest() async {
@@ -1077,38 +1896,42 @@ class _StudentOcrState extends State<StudentOcr> {
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("OCR Request"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("You already have an existing OCR schedule. To upload a new one, you need admin approval."),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: "Reason for new OCR upload",
-                hintText: "Please explain why you need to update your schedule",
-                border: OutlineInputBorder(),
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("OCR Upload Request"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Please provide a reason for your OCR upload request:"),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  hintText: "Enter reason for request...",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
-              controller: reasonController,
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _submitOcrRequest(reasonController.text.isNotEmpty 
+                    ? reasonController.text 
+                    : "Request to update OCR schedule");
+              },
+              child: const Text("Submit Request"),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _submitOcrRequest(reasonController.text);
-            },
-            child: Text("Submit Request"),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1129,8 +1952,18 @@ class _StudentOcrState extends State<StudentOcr> {
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         if (data['success'] == true) {
+          // Update the request status to pending immediately
+          setState(() {
+            ocrRequestStatus = {
+              'ocr_request_id': data['request_id'] ?? '',
+              'ocr_request_status': 'Pending',
+              'ocr_request_reason': reason,
+              'ocr_request_date': DateTime.now().toIso8601String(),
+            };
+          });
+          
           _showResultDialog(data['message']);
-          _checkOcrRequestStatus(); // Refresh request status
+          _checkOcrRequestStatus(); // Refresh request status from server
         } else {
           _showResultDialog(data['error'] ?? 'Failed to submit request');
         }

@@ -28,6 +28,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
   List<dynamic> scholars = [];
   bool isLoading = true;
   String errorMessage = '';
+  final Set<String> _evaluatedPresence = {};
 
   @override
   void initState() {
@@ -500,22 +501,27 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
 
   // Function to build evaluation button based on student status
   Widget _buildEvaluationButton(Map<String, dynamic> scholar) {
-    bool isEvaluated = scholar['assign_evaluation_status'] == 1;
+    final String studId = (scholar['stud_active_id'] ?? '').toString();
+    final bool hasEvaluationRecord = _evaluatedPresence.contains(studId);
+    final bool passedEvaluation = scholar['assign_evaluation_status'] == 1;
+    final bool isEvaluated = passedEvaluation || hasEvaluationRecord;
     bool canEvaluate = scholar['assign_render_status'] == 1;
     
     if (isEvaluated) {
-      // Student is already evaluated - show "Evaluated" status (not clickable)
+      // Evaluated badge: green when passed, red when failed (status still 0)
+      final Color? bg = passedEvaluation ? Colors.green[600] : Colors.red[600];
+      final IconData icon = passedEvaluation ? Icons.check_circle : Icons.error;
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.green[600],
+          color: bg,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.check_circle,
+              icon,
               color: Colors.white,
               size: 12,
             ),
@@ -659,11 +665,10 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
 
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
-        print(res);
-        print("supervisor id ni niya" + widget.supervisor_id);
         if (res != 0) {
+          scholars = res;
+          await _loadEvaluationPresence();
           setState(() {
-            scholars = res;
             isLoading = false;
           });
         } else {
@@ -673,6 +678,7 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
           });
         }
       } else {
+        
         setState(() {
           isLoading = false;
           errorMessage =
@@ -680,10 +686,63 @@ class _AdvisorScholarListState extends State<AdvisorScholarList> {
         });
       }
     } catch (e) {
+      
       setState(() {
         isLoading = false;
         errorMessage = "An error occurred: $e";
       });
+    }
+  }
+
+  // Load evaluation presence from tbl_evaluation_sf and tbl_evaluation_office for current scholars
+  Future<void> _loadEvaluationPresence() async {
+    _evaluatedPresence.clear();
+    if (scholars.isEmpty) return;
+    try {
+      final ids = scholars
+          .map((s) => (s['stud_active_id'] ?? '').toString())
+          .where((id) => id.isNotEmpty)
+          .toList();
+
+      if (ids.isEmpty) return;
+
+      final url = Uri.parse("${SessionStorage.url}CSDL.php");
+      final bodySf = {
+        "operation": "getEvaluationSFBatch",
+        "json": jsonEncode({"stud_ids": ids})
+      };
+      final bodyOffice = {
+        "operation": "getEvaluationOfficeBatch",
+        "json": jsonEncode({"stud_ids": ids})
+      };
+
+      final respSf = await http.post(url, body: bodySf);
+      if (respSf.statusCode == 200) {
+        final data = jsonDecode(respSf.body);
+        if (data is List) {
+          for (final row in data) {
+            final sid = (row['stud_id'] ?? '').toString();
+            if (sid.isNotEmpty) _evaluatedPresence.add(sid);
+          }
+        }
+      } else {
+        
+      }
+
+      final respOffice = await http.post(url, body: bodyOffice);
+      if (respOffice.statusCode == 200) {
+        final data = jsonDecode(respOffice.body);
+        if (data is List) {
+          for (final row in data) {
+            final sid = (row['stud_id'] ?? '').toString();
+            if (sid.isNotEmpty) _evaluatedPresence.add(sid);
+          }
+        }
+      } else {
+        
+      }
+    } catch (_) {
+      // Ignore errors; fallback is assign_evaluation_status
     }
   }
 }

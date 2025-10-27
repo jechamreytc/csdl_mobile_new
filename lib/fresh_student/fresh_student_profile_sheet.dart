@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import 'dart:async';
 import 'dart:math';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +82,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
         });
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
     }
   }
 
@@ -112,7 +113,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
     }
   }
 
@@ -243,34 +244,15 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
                       ),
                       // Using ShadSwitch
                       ShadSwitch(
-                        value: authenticationStatus ==
-                            1, // Switch is on when authenticationStatus is 1
+                        value: authenticationStatus == 1,
                         onChanged: (bool v) {
                           setState(() {
-                            // Set the authenticationStatus based on the switch state
-                            authenticationStatus = v
-                                ? 1
-                                : 0; // Update authenticationStatus to 1 or 0
-
-                            // Update the isTwoFactorEnabled flag accordingly
+                            authenticationStatus = v ? 1 : 0;
                             isTwoFactorEnabled = v;
                           });
-
-                          if (v) {
-                            // If 2FA is turned on, show OTP dialog for verification
-                            _showOtpDialog(
-                                isForPasswordChange:
-                                    false); // Pass false for enabling 2FA
-                          } else {
-                            // If 2FA is turned off, show OTP dialog and verify OTP before disabling 2FA
-                            _showOtpDialog(
-                                isForPasswordChange: false,
-                                isForDisabling2FA:
-                                    true); // Pass true for disabling 2FA
-                          }
+                          _showOtpDialogForTwoFactor(enable: v);
                         },
                         thumbColor: Color(0xFF104038),
-                        // thumbColor: Colors.green.shade200,
                       ),
                     ],
                   ),
@@ -284,10 +266,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
                       child: const Text('Change Password',
                           style: TextStyle(color: Colors.white)),
                       onPressed: () {
-                        // Show OTP dialog before changing password
-                        _showOtpDialog(
-                            isForPasswordChange:
-                                true); // Pass flag to indicate it's for password change
+                        _showChangePasswordDialog();
                       },
                     ),
                   ),
@@ -439,7 +418,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
           );
         }
       } catch (e) {
-        print("Error: $e");
+        // print("Error: $e");
         Get.snackbar(
           "Error",
           "An error occurred while sending the OTP. Please try again.",
@@ -589,7 +568,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while enabling 2FA.",
@@ -637,7 +616,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while disabling 2FA.",
@@ -650,6 +629,472 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
 
   void _logout() async {
     Navigator.pushReplacementNamed(context, '/home');
+  }
+
+  Future<void> sendOtpEmail(String email, String otp) async {
+    try {
+      final url = Uri.parse("${SessionStorage.url}transaction.php");
+      final jsonData = {
+        "emailToSent": email,
+        "emailSubject": "Verification Code",
+        "emailBody": "Your verification code is: <b>$otp</b>",
+      };
+      final body = {"operation": "sendEmail", "json": jsonEncode(jsonData)};
+      await http.post(url, body: body);
+    } catch (_) {}
+  }
+
+  void _showOtpDialogForPasswordChange(String currentPwd, String newPwd) {
+    final otpController = TextEditingController();
+    final emailStepController = TextEditingController(text: emailController.text);
+    String generatedOtp = '';
+    int resendCooldown = 0;
+    int expireSeconds = 0;
+    bool dialogAlive = true;
+    int step = 1; // 1=email, 2=verify
+    bool isOtpSent = false;
+
+    String generateOtp() {
+      final r = Random();
+      return (r.nextInt(900000) + 100000).toString();
+    }
+
+    Future<void> startTimers(StateSetter setState) async {
+      resendCooldown = 30;
+      expireSeconds = 300;
+      // resend cooldown
+      Future.doWhile(() async {
+        await Future.delayed(const Duration(seconds: 1));
+        if (!dialogAlive || resendCooldown <= 0) return false;
+        setState(() => resendCooldown -= 1);
+        return resendCooldown > 0;
+      });
+      // expiry countdown
+      Future.doWhile(() async {
+        await Future.delayed(const Duration(seconds: 1));
+        if (!dialogAlive || expireSeconds <= 0) return false;
+        setState(() => expireSeconds -= 1);
+        return expireSeconds > 0;
+      });
+    }
+
+    showShadDialog(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(30.0),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return ShadDialog(
+              title: Text(step == 1 ? 'Verify Email' : 'Verify Code', style: const TextStyle(color: Colors.white)),
+              actions: [
+                if (step == 1) ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      dialogAlive = false;
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Send Code', style: TextStyle(color: Colors.white)),
+                    onPressed: () async {
+                      final email = emailStepController.text.trim();
+                      if (email.isEmpty) {
+                        Get.snackbar('Error', 'Please enter your email', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      generatedOtp = generateOtp();
+                      await sendOtpEmail(email, generatedOtp);
+                      setState(() {
+                        isOtpSent = true;
+                        step = 2;
+                      });
+                      await startTimers(setState);
+                    },
+                  ),
+                ] else ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      dialogAlive = false;
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ShadButton(
+                    backgroundColor: const Color(0xFF1F2937),
+                    child: const Text('Verify', style: TextStyle(color: Colors.white)),
+                    onPressed: () async {
+                      if (!isOtpSent) {
+                        Get.snackbar('Error', 'Please send the code first', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (otpController.text.trim().isEmpty) {
+                        Get.snackbar('Error', 'Please enter the code', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (expireSeconds <= 0) {
+                        Get.snackbar('Error', 'Code expired. Please resend a new code.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (otpController.text.trim() != generatedOtp) {
+                        Get.snackbar('Error', 'Incorrect code. Try again.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      try {
+                        var url = Uri.parse("${SessionStorage.url}transaction.php");
+                        Map<String, dynamic> jsonData = {
+                          "username": widget.student_id,
+                          "stud_id": widget.student_id,
+                          "stud_currentPassword": currentPwd,
+                          "stud_password": newPwd,
+                        };
+                        Map<String, String> requestBody = {
+                          "operation": "verifyAndUpdatePassword",
+                          "json": jsonEncode(jsonData),
+                        };
+                        var response = await http.post(url, body: requestBody);
+                        if (response.statusCode == 200) {
+                          var res = jsonDecode(response.body);
+                          if (res == 1) {
+                            Get.snackbar('Success', 'Password updated successfully.', backgroundColor: Colors.green, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                            dialogAlive = false;
+                            Navigator.pop(context);
+                          } else if (res == 2) {
+                            Get.snackbar('Notice', 'Password already updated before.', backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                          } else {
+                            Get.snackbar('Error', 'Failed to update password.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                          }
+                        } else {
+                          Get.snackbar('Error', 'Server error: ${response.statusCode}', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        }
+                      } catch (e) {
+                        Get.snackbar('Error', 'An error occurred: $e', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      }
+                    },
+                  ),
+                ],
+              ],
+              child: Container(
+                width: 360,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (step == 1) ...[
+                      ShadInput(
+                        controller: emailStepController,
+                        placeholder: const Text('your@email.com'),
+                      ),
+                    ] else ...[
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: const Icon(Icons.shield_outlined, color: Color(0xFF104038)),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Enter Verification Code',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF104038)),
+                      ),
+                      const SizedBox(height: 6),
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.black87),
+                          children: [
+                            const TextSpan(text: "We've sent a 6-digit code to\n"),
+                            TextSpan(
+                              text: emailStepController.text,
+                              style: const TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Code expires in: ${Duration(seconds: expireSeconds).toString().substring(2,7)}',
+                        style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 14),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Verification Code', style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Color(0xFF0F9D58), width: 2),
+                        ),
+                        child: ShadInput(
+                          controller: otpController,
+                          placeholder: const Text('Enter 6-digit code'),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Enter the 6-digit code sent to your email', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Didn't receive the code? ", style: TextStyle(color: Colors.black54, fontSize: 12)),
+                          if (resendCooldown > 0)
+                            Text('Resend in ${resendCooldown}s', style: const TextStyle(color: Colors.black45, fontSize: 12))
+                          else
+                            TextButton(
+                              onPressed: () async {
+                                generatedOtp = generateOtp();
+                                await sendOtpEmail(emailStepController.text.trim(), generatedOtp);
+                                setState(() {
+                                  resendCooldown = 30;
+                                  expireSeconds = 300;
+                                });
+                                await startTimers(setState);
+                              },
+                              child: const Text('Resend', style: TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() { step = 1; });
+                          },
+                          child: const Text('â† Back', style: TextStyle(color: Colors.black54)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showOtpDialogForTwoFactor({required bool enable}) {
+    final otpController = TextEditingController();
+    final emailStepController = TextEditingController(text: emailController.text);
+    String generatedOtp = '';
+    int resendCooldown = 0;
+    int expireSeconds = 0;
+    bool dialogAlive = true;
+    int step = 1;
+    bool isOtpSent = false;
+
+    String generateOtp() {
+      final r = Random();
+      return (r.nextInt(900000) + 100000).toString();
+    }
+
+    Future<void> startTimers(StateSetter setState) async {
+      resendCooldown = 30;
+      expireSeconds = 300;
+      Future.doWhile(() async {
+        await Future.delayed(const Duration(seconds: 1));
+        if (!dialogAlive || resendCooldown <= 0) return false;
+        setState(() => resendCooldown -= 1);
+        return resendCooldown > 0;
+      });
+      Future.doWhile(() async {
+        await Future.delayed(const Duration(seconds: 1));
+        if (!dialogAlive || expireSeconds <= 0) return false;
+        setState(() => expireSeconds -= 1);
+        return expireSeconds > 0;
+      });
+    }
+
+    showShadDialog(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(30.0),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return ShadDialog(
+              title: Text(step == 1 ? 'Verify Email' : 'Verify Code', style: const TextStyle(color: Colors.white)),
+              actions: [
+                if (step == 1) ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      dialogAlive = false;
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Send Code', style: TextStyle(color: Colors.white)),
+                    onPressed: () async {
+                      final email = emailStepController.text.trim();
+                      if (email.isEmpty) {
+                        Get.snackbar('Error', 'Please enter your email', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      generatedOtp = generateOtp();
+                      await sendOtpEmail(email, generatedOtp);
+                      setState(() { isOtpSent = true; step = 2; });
+                      await startTimers(setState);
+                    },
+                  ),
+                ] else ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      dialogAlive = false;
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ShadButton(
+                    backgroundColor: const Color(0xFF1F2937),
+                    child: const Text('Verify', style: TextStyle(color: Colors.white)),
+                    onPressed: () async {
+                      if (!isOtpSent) {
+                        Get.snackbar('Error', 'Please send the code first', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (otpController.text.trim().isEmpty) {
+                        Get.snackbar('Error', 'Please enter the code', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (expireSeconds <= 0) {
+                        Get.snackbar('Error', 'Code expired. Please resend a new code.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (otpController.text.trim() != generatedOtp) {
+                        Get.snackbar('Error', 'Incorrect code. Try again.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                        return;
+                      }
+                      if (enable) {
+                        enable2fa();
+                      } else {
+                        disable2FA();
+                      }
+                      dialogAlive = false;
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ],
+              child: Container(
+                width: 360,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (step == 1) ...[
+                      ShadInput(
+                        controller: emailStepController,
+                        placeholder: const Text('your@email.com'),
+                      ),
+                    ] else ...[
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: const Icon(Icons.shield_outlined, color: Color(0xFF104038)),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Enter Verification Code',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF104038)),
+                      ),
+                      const SizedBox(height: 6),
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.black87),
+                          children: [
+                            const TextSpan(text: "We've sent a 6-digit code to\n"),
+                            TextSpan(
+                              text: emailStepController.text,
+                              style: const TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Code expires in: ${Duration(seconds: expireSeconds).toString().substring(2,7)}',
+                        style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 14),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Verification Code', style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Color(0xFF0F9D58), width: 2),
+                        ),
+                        child: ShadInput(
+                          controller: otpController,
+                          placeholder: const Text('Enter 6-digit code'),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Enter the 6-digit code sent to your email', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Didn't receive the code? ", style: TextStyle(color: Colors.black54, fontSize: 12)),
+                          if (resendCooldown > 0)
+                            Text('Resend in ${resendCooldown}s', style: const TextStyle(color: Colors.black45, fontSize: 12))
+                          else
+                            TextButton(
+                              onPressed: () async {
+                                generatedOtp = generateOtp();
+                                await sendOtpEmail(emailStepController.text.trim(), generatedOtp);
+                                setState(() { resendCooldown = 30; expireSeconds = 300; });
+                                await startTimers(setState);
+                              },
+                              child: const Text('Resend', style: TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () { setState(() { step = 1; }); },
+                          child: const Text('â† Back', style: TextStyle(color: Colors.black54)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   void _showChangePasswordDialog() {
@@ -714,7 +1159,7 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
                     if (newPasswordController.text.length < 8 ||
                         newPasswordController.text.length > 20) {
                       Get.snackbar(
-                          "Error", "Password must be 8–20 characters long.",
+                          "Error", "Password must be 8â€“20 characters long.",
                           backgroundColor: Colors.red,
                           colorText: Colors.white,
                           snackPosition: SnackPosition.BOTTOM);
@@ -732,68 +1177,11 @@ class _EditProfileSheetState extends State<FreshStudentProfileSheet> {
                           snackPosition: SnackPosition.BOTTOM);
                       return;
                     }
-
-                    try {
-                      var url =
-                          Uri.parse("${SessionStorage.url}transaction.php");
-                      Map<String, dynamic> jsonData = {
-                        "username": widget.student_id,
-                        "stud_id": widget.student_id,
-                        "stud_currentPassword":
-                            currentPasswordController.text, // ✅ FIXED
-                        "stud_password": newPasswordController.text,
-                      };
-
-                      Map<String, String> requestBody = {
-                        "operation": "verifyAndUpdatePassword",
-                        "json": jsonEncode(jsonData),
-                      };
-
-                      var response = await http.post(url, body: requestBody);
-
-                      if (response.statusCode == 200) {
-                        var res = jsonDecode(response.body);
-                        if (res == 1) {
-                          Get.snackbar(
-                            "Success",
-                            "Password updated successfully.",
-                            backgroundColor: Colors.green,
-                            colorText: Colors.white,
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                          Navigator.pop(context);
-                        } else if (res == 2) {
-                          Get.snackbar(
-                            "Notice",
-                            "Password already updated before.",
-                            backgroundColor: Colors.orange,
-                            colorText: Colors.white,
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                        } else {
-                          Get.snackbar(
-                            "Error",
-                            "Failed to update password.",
-                            backgroundColor: Colors.red,
-                            colorText: Colors.white,
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                        }
-                      } else {
-                        Get.snackbar(
-                          "Error",
-                          "Server error: ${response.statusCode}",
-                          backgroundColor: Colors.red,
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.BOTTOM,
-                        );
-                      }
-                    } catch (e) {
-                      Get.snackbar("Error", "An error occurred: $e",
-                          backgroundColor: Colors.red,
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.BOTTOM);
-                    }
+                    Navigator.pop(context);
+                    _showOtpDialogForPasswordChange(
+                      currentPasswordController.text,
+                      newPasswordController.text,
+                    );
                   },
                 ),
               ],

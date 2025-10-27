@@ -83,14 +83,7 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
         "adj_date": formattedDate,
       };
 
-      // Debug: Print the data being sent
-      print("Sending adjustment data:");
-      print("Student ID: ${_studentIdController.text.trim()}");
-      print("Supervisor ID: ${widget.supervisor_id}");
-      print("Reason: ${_reasonController.text.trim()}");
-      print("Hours: ${totalDeduction.toStringAsFixed(2)}");
-      print("Date: $formattedDate");
-      print("Full JSON: ${jsonEncode(jsonData)}");
+      // Debug logging removed
 
       Map<String, String> requestBody = {
         "operation": "addScholarHourDeduction",
@@ -117,7 +110,6 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
             responseBody.contains('Notice') ||
             responseBody.contains('Parse error') ||
             responseBody.contains('Call to undefined')) {
-          print("Server returned HTML instead of JSON: $responseBody");
           setState(() {
             _isLoading = false;
             _message = "Server error: Please try again later";
@@ -130,8 +122,6 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
         try {
           res = jsonDecode(responseBody);
         } catch (jsonError) {
-          print("JSON Parse Error: $jsonError");
-          print("Response body: $responseBody");
           setState(() {
             _isLoading = false;
             _message = "Server error: Invalid response format";
@@ -163,16 +153,17 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
         } else if (res is Map && res["status"] == "success") {
           setState(() {
             _isLoading = false;
-            _message = "Hours deducted successfully.";
           });
 
-          if (res["status"] == "success") {
-            _studentIdController.clear();
-            _reasonController.clear();
-            _hoursInputController.clear();
-            _minutesInputController.clear();
-            _selectedDate = null;
-          }
+          // Clear form fields
+          _studentIdController.clear();
+          _reasonController.clear();
+          _hoursInputController.clear();
+          _minutesInputController.clear();
+          _selectedDate = null;
+          
+          // Show success dialog
+          _showSuccessDialog();
         } else {
           setState(() {
             _isLoading = false;
@@ -180,7 +171,6 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
           });
         }
         
-        print("Response: $res");
       } else {
         setState(() {
           _isLoading = false;
@@ -188,7 +178,6 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
         });
       }
     } catch (e) {
-      print("Error submitting adjustment: $e");
       setState(() {
         _isLoading = false;
         _message = "An error occurred. Please try again.";
@@ -288,9 +277,9 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("• Student ID '${_studentIdController.text.trim()}' is assigned to your supervision"),
-                    Text("• The student ID is correct and valid"),
-                    Text("• The student is scheduled for the selected date"),
+                    Text("â€¢ Student ID '${_studentIdController.text.trim()}' is assigned to your supervision"),
+                    Text("â€¢ The student ID is correct and valid"),
+                    Text("â€¢ The student is scheduled for the selected date"),
                   ],
                 ),
               ),
@@ -832,6 +821,25 @@ class _AdvisorStudentAdjustmentState extends State<AdvisorStudentAdjustment> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Success"),
+          content: const Text("Hours adjustment has been successfully submitted."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

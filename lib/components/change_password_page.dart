@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:csdl_mobile/main.dart';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
@@ -19,10 +20,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isPasswordValid = true;
   bool _isConfirmPasswordValid = true;
+  bool _isSendingOtp = false;
+  bool _otpSent = false;
 
   bool _hasNumber = false;
   bool _hasLetter = false;
@@ -46,7 +51,25 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     setState(() {});
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Prefill email for advisor path where userId is email
+    if (widget.isAdvisor) {
+      _emailController.text = widget.userId;
+    }
+  }
+
   Future<void> _changePassword() async {
+    // For advisors, require OTP entry before allowing password change
+    if (widget.isAdvisor) {
+      if (_otpController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter the OTP sent to your email.")),
+        );
+        return;
+      }
+    }
     setState(() {
       _isPasswordValid = _newPasswordController.text.isNotEmpty;
       _isConfirmPasswordValid = _confirmPasswordController.text.isNotEmpty;
@@ -84,9 +107,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             _newPasswordController.text
       };
 
-      print(widget.isAdvisor ? "supM_id" : "stud_id");
-      print(widget.isAdvisor ? "supM_password" : "stud_password");
-      print(_newPasswordController.text);
+      // print(widget.isAdvisor ? "supM_id" : "stud_id");
+      // print(widget.isAdvisor ? "supM_password" : "stud_password");
+      // print(_newPasswordController.text);
 
       Map<String, String> requestBody = {
         "operation": "updatePassword",
@@ -95,13 +118,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       var response = await http.post(url, body: requestBody);
 
-      print("API Raw Response: ${response.body}");
+      // print("API Raw Response: ${response.body}");
 
       if (response.statusCode == 200) {
         try {
           var res = jsonDecode(response.body);
 
-          print("API Decoded Response: $res");
+          // print("API Decoded Response: $res");
 
           if (res["success"] == true) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +145,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             );
           }
         } catch (e) {
-          print("Failed to decode JSON: $e");
+          // print("Failed to decode JSON: $e");
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text("Invalid server response: ${response.body}")),
@@ -140,11 +163,74 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     }
   }
 
+  Future<void> _sendOtp() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your email.")),
+      );
+      return;
+    }
+    final emailRegex = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a valid email address.")),
+      );
+      return;
+    }
+
+    setState(() => _isSendingOtp = true);
+    try {
+      final url = Uri.parse("${SessionStorage.url}transaction.php");
+      final jsonData = {"email": email};
+      final bodyJson = jsonEncode(jsonData);
+      final bodyHash = crypto.sha256.convert(utf8.encode(bodyJson)).toString();
+      final requestBody = {
+        "operation": "forgotPassword",
+        "json": bodyJson,
+        "hash": bodyHash,
+      };
+
+      final response = await http.post(url, body: requestBody);
+      dynamic res;
+      try {
+        res = jsonDecode(response.body);
+        if (res is String && (res.trim().startsWith('{') || res.trim().startsWith('['))) {
+          res = jsonDecode(res);
+        }
+      } catch (_) {
+        res = {"success": false, "message": "Invalid server response: ${response.body}"};
+      }
+
+      if (response.statusCode == 200 && res is Map && res["success"] == true) {
+        setState(() => _otpSent = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res["message"] ?? "OTP sent successfully."), backgroundColor: Colors.green),
+        );
+      } else {
+        final msg = (res is Map && res["message"] is String)
+            ? res["message"]
+            : "Failed to send OTP. Please try again.";
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error sending OTP: $e"), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isSendingOtp = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Check if all conditions are met to enable the button
-    bool isPasswordValidToSubmit =
-        _hasNumber && _hasLetter && _hasSymbol && _hasUpperAndLower;
+    bool isPasswordValidToSubmit = _hasNumber && _hasLetter && _hasSymbol && _hasUpperAndLower &&
+        (
+          widget.isAdvisor ? _otpController.text.trim().isNotEmpty : true
+        );
 
     return Scaffold(
         appBar: PreferredSize(
@@ -190,6 +276,59 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // Show Email and OTP only for advisors
+                      if (widget.isAdvisor) ...[
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            labelText: "Email",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          readOnly: widget.isAdvisor,
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _otpController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: "OTP",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: _isSendingOtp ? null : _sendOtp,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: _isSendingOtp
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Text("Send OTP", style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
 
                       // New Password
                       TextFormField(

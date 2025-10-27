@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/student_drawer.dart';
@@ -53,12 +53,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
   String scholarshipName = '';
   String sessionName = '';
 
+  // Job type variables
+  String? jobType;
+  int? jobTypeStatus; // 0: pending, 1: approved, 2: declined
+
   @override
   void initState() {
     super.initState();
     studentIdNumber = widget.student_id;
     studentRemainingHoursChecker();
     getStudentComplaints();
+    checkJobType();
   }
 
   @override
@@ -181,7 +186,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          uiMode == "text" ? "Status" : "Duty Hours Progress",
+                          (jobTypeStatus == 1) ? "Job Type" : 
+                          (uiMode == "text" ? "Status" : "Duty Hours Progress"),
                           style: TextStyle(
                             color: Color(0xFF104038),
                             fontWeight: FontWeight.bold,
@@ -189,7 +195,167 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        if (uiMode == "bar") ...[
+                        if (jobTypeStatus == 1) ...[
+                          // Show job type when approved (exempted from duty)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Column(
+                              children: [
+                                // Show renewal approved if certificate exists, otherwise show job type
+                                if (certificate != null) ...[
+                                  // Renewal Approved (like normal scholars)
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.card_membership,
+                                        color: Colors.green.shade700,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Renewal Approved",
+                                              style: TextStyle(
+                                                color: Colors.green.shade700,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              "SBO/Working Student - ${sessionName}",
+                                              style: TextStyle(
+                                                color: Colors.green.shade800,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              "Exempted from duty hours",
+                                              style: TextStyle(
+                                                color: Colors.green.shade600,
+                                                fontSize: 12,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade100,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          "RENEWED",
+                                          style: TextStyle(
+                                            color: Colors.green.shade700,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // View Certificate button (like normal scholars)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _showCertificateDialog(),
+                                      icon: Icon(Icons.visibility, color: Colors.white, size: 16),
+                                      label: Text(
+                                        "View Certificate",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green.shade600,
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ] else ...[
+                                  // Regular job type display (no certificate yet)
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.work,
+                                        color: Colors.green.shade700,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Approved Job Type",
+                                              style: TextStyle(
+                                                color: Colors.green.shade700,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              jobType ?? "SBO/Working Student",
+                                              style: TextStyle(
+                                                color: Colors.green.shade800,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              "Exempted from duty hours",
+                                              style: TextStyle(
+                                                color: Colors.green.shade600,
+                                                fontSize: 12,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade100,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          "APPROVED",
+                                          style: TextStyle(
+                                            color: Colors.green.shade700,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ] else if (uiMode == "bar") ...[
                           LinearPercentIndicator(
                             lineHeight: 22.0,
                             percent: percent.clamp(0.0, 1.0),
@@ -412,7 +578,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
 
-      print("API Response: $res");
+      // print("API Response: $res");
 
       if (res != null && res is Map<String, dynamic>) {
         setState(() {
@@ -435,10 +601,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
           sessionName = (res['session_name'] ?? '').toString();
         });
       } else {
-        print("Invalid response format: $res");
+        // print("Invalid response format: $res");
       }
     } catch (e) {
-      print("Error fetching remaining hours: $e");
+      // print("Error fetching remaining hours: $e");
     }
   }
 
@@ -471,7 +637,49 @@ class _StudentDashboardState extends State<StudentDashboard> {
         }
       });
     } catch (e) {
-      print("Error fetching complaints: $e");
+      // print("Error fetching complaints: $e");
+    }
+  }
+
+  void checkJobType() async {
+    try {
+      var url = Uri.parse("${SessionStorage.url}transaction.php");
+      Map<String, dynamic> jsonData = {
+        "job_stud_id": widget.student_id,
+      };
+      Map<String, String> requestBody = {
+        "operation": "getJobType",
+        "json": jsonEncode(jsonData),
+      };
+
+      var response = await http.post(url, body: requestBody);
+      var res = jsonDecode(response.body);
+
+      // print("Job Type API Response: $res");
+
+      if (res != null) {
+        if (res is List && res.isNotEmpty) {
+          var jobData = res.first;
+          setState(() {
+            jobType = jobData['job_type']?.toString();
+            jobTypeStatus = int.tryParse(jobData['job_status']?.toString() ?? '');
+          });
+        } else if (res is Map<String, dynamic>) {
+          setState(() {
+            jobType = res['job_type']?.toString();
+            jobTypeStatus = int.tryParse(res['job_status']?.toString() ?? '');
+          });
+        }
+        
+        // If job type is null but status is approved, set default values
+        if (jobTypeStatus == 1 && (jobType == null || jobType!.isEmpty)) {
+          setState(() {
+            jobType = "SBO/Working Student"; // Default value for approved but no specific type
+          });
+        }
+      }
+    } catch (e) {
+      // print("Error fetching job type: $e");
     }
   }
 
@@ -792,18 +1000,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
       );
 
       // Add signature line using rectangle
-      graphics.drawRectangle(
-        pen: PdfPen(PdfColor(30, 111, 80), width: 1),
-        bounds: Rect.fromLTWH(50, 610, pageSize.width - 100, 0),
-      );
+      // graphics.drawRectangle(
+      //   pen: PdfPen(PdfColor(30, 111, 80), width: 1),
+      //   bounds: Rect.fromLTWH(50, 610, pageSize.width - 100, 0),
+      // );
 
-      graphics.drawString(
-        'Authorized Signature',
-        PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.italic),
-        format: PdfStringFormat(alignment: PdfTextAlignment.center),
-        bounds: Rect.fromLTWH(50, 620, pageSize.width - 100, 20),
-        brush: PdfSolidBrush(PdfColor(30, 111, 80)),
-      );
+      // graphics.drawString(
+      //   'Authorized Signature',
+      //   PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.italic),
+      //   format: PdfStringFormat(alignment: PdfTextAlignment.center),
+      //   bounds: Rect.fromLTWH(50, 620, pageSize.width - 100, 20),
+      //   brush: PdfSolidBrush(PdfColor(30, 111, 80)),
+      // );
 
       // Save PDF
       final List<int> bytes = await document.save();

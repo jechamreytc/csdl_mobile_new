@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csdl_mobile/session_storage.dart';
@@ -99,7 +99,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                       const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: Text(
-                          "📢 ANNOUNCEMENT",
+                          "ðŸ“¢ ANNOUNCEMENT",
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -155,7 +155,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   }
 }
 
-/// ✅ Dialog Widget
+/// âœ… Dialog Widget
 void showAnnouncementDialog(
   BuildContext context,
   Map<String, dynamic> announcement,
@@ -182,7 +182,7 @@ void showAnnouncementDialog(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "📢 Important Announcement",
+                    "ðŸ“¢ Important Announcement",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -213,12 +213,12 @@ void showAnnouncementDialog(
               ),
               const SizedBox(height: 16),
               Text(
-                "📅 Date: ${announcement["announcement_date_created"]?.split(" ")[0] ?? "N/A"}",
+                "ðŸ“… Date: ${announcement["announcement_date_created"]?.split(" ")[0] ?? "N/A"}",
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Text(
-                "⏰ Time: ${announcement["announcement_date_created"]?.split(" ")[1] ?? "N/A"}",
+                "â° Time: ${announcement["announcement_date_created"]?.split(" ")[1] ?? "N/A"}",
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 16),
@@ -228,12 +228,12 @@ void showAnnouncementDialog(
               ),
               const SizedBox(height: 20),
               Text(
-                "👤 Admin: ${announcement["adm_name"] ?? "N/A"}",
+                "ðŸ‘¤ Admin: ${announcement["adm_name"] ?? "N/A"}",
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 8),
               Text(
-                "🏫 Academic Session: ${announcement["session_name"] ?? "N/A"}",
+                "ðŸ« Academic Session: ${announcement["session_name"] ?? "N/A"}",
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 20),

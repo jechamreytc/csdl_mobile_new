@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -32,7 +32,7 @@ class _ScholarshipRequestFormState extends State<ScholarshipRequestForm> {
     fetchCourses();
   }
 
-  // ✅ GET without JSON
+  // âœ… GET without JSON
   void fetchStudentStatuses() async {
     try {
       var url = Uri.parse("${SessionStorage.url}assign.php");
@@ -93,7 +93,7 @@ class _ScholarshipRequestFormState extends State<ScholarshipRequestForm> {
     }
   }
 
-  // ✅ Only POST with JSON
+  // âœ… Only POST with JSON
   void submitScholarshipRequest() async {
     String studId = _studIdController.text.trim();
     String fullname = _fullnameController.text.trim();
@@ -159,71 +159,333 @@ class _ScholarshipRequestFormState extends State<ScholarshipRequestForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Scholarship Request")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            TextField(
-              controller: _studIdController,
-              decoration: const InputDecoration(labelText: "Scholar ID"),
-            ),
-            TextField(
-              controller: _fullnameController,
-              decoration: const InputDecoration(labelText: "Scholar Name"),
-            ),
-            TextField(
-              controller: _reasonController,
-              decoration:
-                  const InputDecoration(labelText: "Reason for Stopping"),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            DropdownButton<String>(
-              hint: const Text("Select Student Status"),
-              value: selectedStatus,
-              isExpanded: true,
-              onChanged: (value) => setState(() => selectedStatus = value),
-              items: _statuses.map<DropdownMenuItem<String>>((item) {
-                return DropdownMenuItem(
-                  value: item['status_id'].toString(),
-                  child: Text(item['status_name'] ?? 'Unknown'),
-                );
-              }).toList(),
-            ),
-            DropdownButton<String>(
-              hint: const Text("Select Academic Session"),
-              value: selectedSession,
-              isExpanded: true,
-              onChanged: (value) => setState(() => selectedSession = value),
-              items: _sessions.map<DropdownMenuItem<String>>((item) {
-                return DropdownMenuItem(
-                  value: item['session_id'].toString(),
-                  child: Text(item['session_name'] ?? 'Unknown'),
-                );
-              }).toList(),
-            ),
-            DropdownButton<String>(
-              hint: const Text("Select Course"),
-              value: selectedCourse,
-              isExpanded: true,
-              onChanged: (value) => setState(() => selectedCourse = value),
-              items: _courses.map<DropdownMenuItem<String>>((item) {
-                return DropdownMenuItem(
-                  value: item['course_id'].toString(),
-                  child: Text(item['course_name'] ?? 'Unknown'),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: isLoading ? null : submitScholarshipRequest,
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text("Submit"),
-            ),
-          ],
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text(
+          "Scholarship Request",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: const Color(0xFF104038),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF104038),
+              Color(0xFFF8FAFC),
+            ],
+            stops: [0.0, 0.3],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              // Header Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF104038).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.school,
+                        size: 48,
+                        color: Color(0xFF104038),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Scholarship Request Form",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF104038),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Please fill out all required information to submit your scholarship request",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Form Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Personal Information",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF104038),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Scholar ID Field
+                    _buildStyledTextField(
+                      controller: _studIdController,
+                      label: "Scholar ID",
+                      icon: Icons.badge,
+                      hint: "Enter your scholar ID",
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Scholar Name Field
+                    _buildStyledTextField(
+                      controller: _fullnameController,
+                      label: "Scholar Name",
+                      icon: Icons.person,
+                      hint: "Enter your full name",
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Reason Field
+                    _buildStyledTextField(
+                      controller: _reasonController,
+                      label: "Reason for Stopping",
+                      icon: Icons.description,
+                      hint: "Please provide a detailed reason",
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    const Text(
+                      "Academic Information",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF104038),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Student Status Dropdown
+                    _buildStyledDropdown(
+                      hint: "Select Student Status",
+                      value: selectedStatus,
+                      onChanged: (value) => setState(() => selectedStatus = value),
+                      items: _statuses.map<DropdownMenuItem<String>>((item) {
+                        return DropdownMenuItem(
+                          value: item['status_id'].toString(),
+                          child: Text(item['status_name'] ?? 'Unknown'),
+                        );
+                      }).toList(),
+                      icon: Icons.school,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Academic Session Dropdown
+                    _buildStyledDropdown(
+                      hint: "Select Academic Session",
+                      value: selectedSession,
+                      onChanged: (value) => setState(() => selectedSession = value),
+                      items: _sessions.map<DropdownMenuItem<String>>((item) {
+                        return DropdownMenuItem(
+                          value: item['session_id'].toString(),
+                          child: Text(item['session_name'] ?? 'Unknown'),
+                        );
+                      }).toList(),
+                      icon: Icons.calendar_today,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Course Dropdown
+                    _buildStyledDropdown(
+                      hint: "Select Course",
+                      value: selectedCourse,
+                      onChanged: (value) => setState(() => selectedCourse = value),
+                      items: _courses.map<DropdownMenuItem<String>>((item) {
+                        return DropdownMenuItem(
+                          value: item['course_id'].toString(),
+                          child: Text(item['course_name'] ?? 'Unknown'),
+                        );
+                      }).toList(),
+                      icon: Icons.menu_book,
+                    ),
+                    const SizedBox(height: 32),
+                    
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : submitScholarshipRequest,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF104038),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.send, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Submit Request",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyledTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon, color: const Color(0xFF104038)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF104038), width: 2),
+          ),
+          labelStyle: const TextStyle(color: Color(0xFF104038)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyledDropdown({
+    required String hint,
+    required String? value,
+    required Function(String?) onChanged,
+    required List<DropdownMenuItem<String>> items,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<String>(
+        hint: Text(hint),
+        value: value,
+        isExpanded: true,
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: const Color(0xFF104038)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF104038), width: 2),
+          ),
+        ),
+        onChanged: onChanged,
+        items: items,
       ),
     );
   }

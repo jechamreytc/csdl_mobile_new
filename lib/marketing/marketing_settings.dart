@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:math';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/marketing/marketing_drawer.dart';
@@ -82,7 +82,7 @@ class _MarketingSettingsState extends State<MarketingSettings> {
         }
       }
     } catch (e) {
-      print("Error loading profile: $e");
+      // print("Error loading profile: $e");
     }
 
     setState(() {
@@ -93,20 +93,19 @@ class _MarketingSettingsState extends State<MarketingSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(50),
-        child: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          flexibleSpace: Image.asset(
-            'assets/images/coc_logo.png',
-            height: 50,
-            width: 50,
-          ),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          "Account Settings",
+          style: TextStyle(color: Color(0xFF104038)),
         ),
+        iconTheme: const IconThemeData(color: Color(0xFF104038)),
       ),
       drawer: MarketingDrawer(adminEmail: widget.adminEmail, currentIndex: 2),
       body: Container(
+        constraints: const BoxConstraints.expand(),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.green.shade50, Colors.green.shade200],
@@ -119,81 +118,38 @@ class _MarketingSettingsState extends State<MarketingSettings> {
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
-                    
-                    // Profile Card (Student Style)
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Color(0xFF104038),
-                              child: Icon(Icons.person, size: 30, color: Colors.white),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    adminName,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF104038),
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Email: $adminEmail",
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "ID: $adminId",
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
+                    const Text(
+                      "Make changes to your profile here. Click save when you're done.",
+                      style: TextStyle(color: Colors.black54),
                     ),
+                    const SizedBox(height: 16),
 
-                    const SizedBox(height: 20),
-
-                    // Profile Information Card
-                    Card(
-                      color: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            _buildProfileInfo("Name", adminName),
-                            const SizedBox(height: 16),
-                            _buildProfileInfo("Email", adminEmail),
-                            const SizedBox(height: 16),
-                            _buildProfileInfo("ID", adminId),
-                            // const SizedBox(height: 16),
-                            // _buildProfileInfo("Contact Number", contactNumber),
-                          ],
+                    // Info gradient card (read-only)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.green.shade100, Colors.green.shade50],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildProfileInfo("Name", adminName),
+                          const SizedBox(height: 16),
+                          _buildProfileInfo("ID Number", adminId),
+                          const SizedBox(height: 16),
+                          _buildProfileInfo("Email", adminEmail),
+                        ],
                       ),
                     ),
 
@@ -393,7 +349,7 @@ class _MarketingSettingsState extends State<MarketingSettings> {
         }
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while enabling 2FA.",
@@ -444,7 +400,7 @@ class _MarketingSettingsState extends State<MarketingSettings> {
         }
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while disabling 2FA.",
@@ -664,7 +620,7 @@ class _MarketingSettingsState extends State<MarketingSettings> {
         }
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while updating password.",

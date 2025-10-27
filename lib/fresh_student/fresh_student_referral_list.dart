@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/fresh_student/fresh_student_add_referral_component.dart';
 import 'package:csdl_mobile/fresh_student/fresh_student_drawer.dart';
 import 'package:flutter/material.dart';
@@ -67,13 +67,13 @@ class _FreshStudentReferralListState extends State<FreshStudentReferralList> {
         });
         }
       } else {
-        print("Failed to load referrals. Status code: ${response.statusCode}");
+        // print("Failed to load referrals. Status code: ${response.statusCode}");
         setState(() {
           isLoading = false;
         });
       }
     } catch (e) {
-      print("Error fetching referral status list: $e");
+      // print("Error fetching referral status list: $e");
       setState(() {
         isLoading = false;
       });
@@ -395,7 +395,7 @@ class _FreshStudentReferralListState extends State<FreshStudentReferralList> {
 
 
   void _showReferralDetails(int referralId) async {
-    print("Fetching details for referral ID: $referralId");
+    // print("Fetching details for referral ID: $referralId");
     
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
@@ -408,24 +408,24 @@ class _FreshStudentReferralListState extends State<FreshStudentReferralList> {
         "json": jsonEncode(jsonData),
       };
 
-      print("API Request: $requestBody");
+      // print("API Request: $requestBody");
       var response = await http.post(url, body: requestBody);
-      print("API Response Status: ${response.statusCode}");
-      print("API Response Body: ${response.body}");
+      // print("API Response Status: ${response.statusCode}");
+      // print("API Response Body: ${response.body}");
       
       var res = jsonDecode(response.body);
 
       if (response.statusCode == 200 && res['success'] == true) {
-        print("Successfully fetched referral details: ${res['referral']}");
+        // print("Successfully fetched referral details: ${res['referral']}");
         _showDetailsDialog(res['referral']);
       } else {
-        print("API returned error: ${res['error'] ?? 'Unknown error'}");
+        // print("API returned error: ${res['error'] ?? 'Unknown error'}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to load referral details: ${res['error'] ?? 'Unknown error'}")),
         );
       }
     } catch (e) {
-      print("Error fetching referral details: $e");
+      // print("Error fetching referral details: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error loading details: $e")),
       );
@@ -578,10 +578,10 @@ class _FreshStudentReferralListState extends State<FreshStudentReferralList> {
                     const SizedBox(height: 8),
                     Text(
                       status == 1 
-                          ? "✅ This referral has been approved and counts toward your progress."
+                          ? "âœ… This referral has been approved and counts toward your progress."
                           : status == 0 
-                              ? "⏳ This referral is pending admin review."
-                              : "❌ This referral was declined and does not count toward your progress.",
+                              ? "â³ This referral is pending admin review."
+                              : "âŒ This referral was declined and does not count toward your progress.",
                       style: TextStyle(
                         fontSize: 12,
                         color: status == 1 

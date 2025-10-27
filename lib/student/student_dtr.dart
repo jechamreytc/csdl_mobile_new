@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/student_drawer.dart';
 import 'package:flutter/material.dart';
@@ -168,10 +168,12 @@ class _StudentDtrState extends State<StudentDtr> {
     );
   }
 
-  // Define the columns of the DataTable (Now only Date and Actions)
+  // Define the columns of the DataTable (Date, Type, Details, Actions)
   List<DataColumn> _columns(double fontSize) {
     return [
       DataColumn(label: Text("Date", style: TextStyle(fontSize: fontSize))),
+      DataColumn(label: Text("Type", style: TextStyle(fontSize: fontSize))),
+      DataColumn(label: Text("Details", style: TextStyle(fontSize: fontSize))),
       DataColumn(label: Text("Actions", style: TextStyle(fontSize: fontSize))),
     ];
   }
@@ -179,10 +181,41 @@ class _StudentDtrState extends State<StudentDtr> {
   // Define the rows of the DataTable
   List<DataRow> _rows(double fontSize) {
     return studentDtr.map((data) {
+      bool isAdjustment = data['source'] == 'ADJUSTMENT';
+      
       return DataRow(
         cells: [
-          DataCell(Text(data['dtr_date'] ?? 'N/A',
+          DataCell(Text(data['record_date'] ?? 'N/A',
               style: TextStyle(fontSize: fontSize))),
+          DataCell(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isAdjustment ? Colors.orange.shade100 : Colors.green.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isAdjustment ? Colors.orange : Colors.green,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                isAdjustment ? 'Adjustment' : 'DTR',
+                style: TextStyle(
+                  fontSize: fontSize - 2,
+                  fontWeight: FontWeight.w600,
+                  color: isAdjustment ? Colors.orange.shade800 : Colors.green.shade800,
+                ),
+              ),
+            ),
+          ),
+          DataCell(
+            Text(
+              isAdjustment 
+                ? '${data['adjustment_deducted'] ?? 'N/A'} hours deducted'
+                : '${data['dtr_time_in'] ?? 'N/A'} - ${data['dtr_time_out'] ?? 'N/A'}',
+              style: TextStyle(fontSize: fontSize),
+            ),
+          ),
           DataCell(
             ElevatedButton(
               onPressed: () => _showDetailsDialog(data),
@@ -196,18 +229,29 @@ class _StudentDtrState extends State<StudentDtr> {
 
   // Function to show the dialog with the detailed data
   void _showDetailsDialog(Map<String, dynamic> data) {
+    bool isAdjustment = data['source'] == 'ADJUSTMENT';
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Details for ${data['dtr_date']}'),
+          title: Text('Details for ${data['record_date']}'),
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Time In: ${data['dtr_time_in'] ?? 'N/A'}'),
-              Text('Time Out: ${data['dtr_time_out'] ?? 'N/A'}'),
-              Text('Rendered Hours: ${data['TotalRendered'] ?? 'N/A'}'),
+              if (isAdjustment) ...[
+                _buildDetailCard('Type', 'Adjustment', Icons.settings, Colors.orange),
+                _buildDetailCard('Date', data['record_date'] ?? 'N/A', Icons.calendar_today, Colors.blue),
+                _buildDetailCard('Hours Deducted', '${data['adjustment_deducted'] ?? 'N/A'} hours', Icons.remove_circle, Colors.red),
+                _buildDetailCard('Reason', data['adjustment_reason'] ?? 'N/A', Icons.info, Colors.grey),
+              ] else ...[
+                _buildDetailCard('Type', 'DTR Record', Icons.access_time, Colors.green),
+                _buildDetailCard('Date', data['record_date'] ?? 'N/A', Icons.calendar_today, Colors.blue),
+                _buildDetailCard('Time In', data['dtr_time_in'] ?? 'N/A', Icons.login, Colors.green),
+                _buildDetailCard('Time Out', data['dtr_time_out'] ?? 'N/A', Icons.logout, Colors.red),
+                _buildDetailCard('Rendered Hours', data['TotalRendered'] ?? 'N/A', Icons.timer, Colors.blue),
+              ],
             ],
           ),
           actions: <Widget>[
@@ -218,6 +262,47 @@ class _StudentDtrState extends State<StudentDtr> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildDetailCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -236,7 +321,7 @@ class _StudentDtrState extends State<StudentDtr> {
 
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
-      print("print ni" + res);
+      // print("print ni" + res);
       if (res != 0) {
         setState(() {
           studentDtr = res;
@@ -244,7 +329,7 @@ class _StudentDtrState extends State<StudentDtr> {
         });
       }
     } catch (e) {
-      print(e);
+      // print(e);
     }
   }
 }

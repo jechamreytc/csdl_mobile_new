@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -105,7 +105,7 @@ class _StudentQrDutyRegistrationState extends State<StudentQrDutyRegistration> {
           return;
         }
 
-        // ✅ Proceed to assign supM_id
+        // âœ… Proceed to assign supM_id
         final assignRes = await http.post(
           url,
           body: {

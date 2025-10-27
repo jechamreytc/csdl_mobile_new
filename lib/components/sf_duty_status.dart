@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -612,7 +612,7 @@ class _SFDutyStatusState extends State<SFDutyStatus> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "• ",
+            "â€¢ ",
             style: TextStyle(
               color: Colors.grey.shade700,
               fontSize: 14,

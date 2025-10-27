@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/marketing/approved_leads.dart';
 import 'package:csdl_mobile/marketing/marketing_drawer.dart';
 import 'package:flutter/material.dart';
@@ -33,8 +33,8 @@ class _HKLeadsPageState extends State<HKLeadsPage> {
         body: {'operation': 'getReferrals', 'json': '{}'},
       );
 
-      print("Response Code: ${response.statusCode}");
-      print("Raw Response: ${response.body}");
+      // print("Response Code: ${response.statusCode}");
+      // print("Raw Response: ${response.body}");
 
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
@@ -48,11 +48,11 @@ class _HKLeadsPageState extends State<HKLeadsPage> {
           isLoading = false;
         });
       } else {
-        print("API returned error: ${data['error']}");
+        // print("API returned error: ${data['error']}");
       }
     } catch (e, stackTrace) {
-      print('❌ fetchReferrals Exception: $e');
-      print('🧾 StackTrace:\n$stackTrace');
+      // print('âŒ fetchReferrals Exception: $e');
+      // print('ðŸ§¾ StackTrace:\n$stackTrace');
     }
   }
 
@@ -71,7 +71,7 @@ class _HKLeadsPageState extends State<HKLeadsPage> {
         },
       );
 
-      print("Update Response: ${response.body}");
+      // print("Update Response: ${response.body}");
 
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
@@ -84,10 +84,10 @@ class _HKLeadsPageState extends State<HKLeadsPage> {
           referrals.removeWhere((ref) => ref['freshmen_ref_id'] == referralId);
         });
       } else {
-        print("Update API error: ${data['error']}");
+        // print("Update API error: ${data['error']}");
       }
     } catch (e) {
-      print('❌ updateStatus Exception: $e');
+      // print('âŒ updateStatus Exception: $e');
     }
   }
 

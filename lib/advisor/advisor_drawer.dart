@@ -1,4 +1,4 @@
-import 'package:csdl_mobile/advisor/advisor.dart';
+﻿import 'package:csdl_mobile/advisor/advisor.dart';
 import 'package:csdl_mobile/advisor/advisor_edit_profile.dart';
 import 'package:csdl_mobile/advisor/advisor_qr_scanner.dart';
 import 'package:csdl_mobile/advisor/advisor_scholar_list.dart';
@@ -165,7 +165,7 @@ class _AdvisorDrawerState extends State<AdvisorDrawer> {
             iconColor: Colors.red,
             label: "Logout",
             onTap: () {
-              SessionStorage.clear(); // ❌ Clear all session
+              SessionStorage.clear(); // âŒ Clear all session
 
               Navigator.pushReplacementNamed(context, '/'); // Back to login
             },

@@ -1,7 +1,9 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:csdl_mobile/fresh_student/fresh_student_drawer.dart';
+import 'package:csdl_mobile/fresh_student/fresh_student_referral_list.dart';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class FreshStudentAddReferralComponent extends StatefulWidget {
@@ -81,7 +83,10 @@ class _FreshStudentAddReferralComponentState
                     _buildTextField("First Name", firstNameController),
                     _buildTextField("Middle Name", middleNameController),
                     _buildTextField("Contact Number", contactNumberController,
-                        prefixText: "+63"),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(11),
+                        ]),
                     _buildTextField("Email Address", emailController,
                         keyboardType: TextInputType.emailAddress),
                     _buildTextField("Address", addressController),
@@ -116,12 +121,13 @@ class _FreshStudentAddReferralComponentState
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text, String? prefixText}) {
+      {TextInputType keyboardType = TextInputType.text, String? prefixText, List<TextInputFormatter>? inputFormatters}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Color(0xFF104038)),
@@ -138,8 +144,34 @@ class _FreshStudentAddReferralComponentState
             borderSide: const BorderSide(color: Color(0xFF104038), width: 2),
           ),
         ),
-        validator: (value) =>
-            value == null || value.isEmpty ? 'Required' : null,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'This field is required';
+          }
+          
+          // Email validation
+          if (label == "Email Address") {
+            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if (!emailRegex.hasMatch(value)) {
+              return 'Please enter a valid email address';
+            }
+          }
+          
+          // Contact number validation (should be 11 digits starting with 09)
+          if (label == "Contact Number") {
+            if (value.length != 11) {
+              return 'Contact number should be 11 digits';
+            }
+            if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+              return 'Contact number should contain only numbers';
+            }
+            if (!value.startsWith('09')) {
+              return 'Contact number should start with 09';
+            }
+          }
+          
+          return null;
+        },
       ),
     );
   }
@@ -168,24 +200,59 @@ class _FreshStudentAddReferralComponentState
       var res = jsonDecode(response.body);
 
       if (response.statusCode == 200 && res != 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Referral added successfully!")),
-        );
+        // Clear the form
         _formKey.currentState?.reset();
-        getAllReferrals();
+        
+        // Show success dialog
+        _showSuccessDialog();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to add referral.")),
+          const SnackBar(
+            content: Text("Failed to add referral."),
+            backgroundColor: Colors.red,
+          ),
         );
       }
 
-      print("Add Referral Response: $res");
+      // print("Add Referral Response: $res");
     } catch (e) {
-      print("Error adding referral: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        // print("Error adding referral: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Success"),
+          content: const Text("You have successfully added the referral."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FreshStudentReferralList(
+                      student_id: widget.student_id,
+                    ),
+                  ),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void getAllReferrals() async {
@@ -208,12 +275,12 @@ class _FreshStudentAddReferralComponentState
           referrals = List<String>.from(res.map((item) =>
               "${item['freshmen_ref_firstname']} ${item['freshmen_ref_middle_name']} ${item['freshmen_ref_lastname']}"));
         });
-        print("All Referrals: $res");
+        // print("All Referrals: $res");
       } else {
-        print("Failed to load referrals. Status code: ${response.statusCode}");
+        // print("Failed to load referrals. Status code: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error fetching all referrals: $e");
+      // print("Error fetching all referrals: $e");
     }
   }
 }

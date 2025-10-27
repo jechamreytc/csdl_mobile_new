@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Captcha extends StatefulWidget {
@@ -27,9 +27,9 @@ class _CaptchaState extends State<Captcha> {
 
   void verifyCaptcha() {
     if (_captchaController.text == generatedCaptcha) {
-      print("Successfully logged in!");
+      // print("Successfully logged in!");
     } else {
-      print("Wrong Captcha! Try again.");
+      // print("Wrong Captcha! Try again.");
     }
   }
 

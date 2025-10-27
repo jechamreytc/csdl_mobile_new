@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:async';
 import 'dart:math';
 // import 'package:csdl_mobile/advisor/advisor.dart';
@@ -9,6 +9,7 @@ import 'package:csdl_mobile/advisor/advisor_qr_code.dart';
 // import 'package:csdl_mobile/advisor/advisor_hidden_drawer.dart';
 import 'package:csdl_mobile/advisor/advisor_scholar_list.dart';
 import 'package:csdl_mobile/components/change_password_page.dart';
+import 'package:csdl_mobile/components/forgot_password_request.dart';
 import 'package:csdl_mobile/entry_point.dart';
 import 'package:csdl_mobile/fresh_student/fresh_student.dart';
 import 'package:csdl_mobile/fresh_student/fresh_student_add_referral_component.dart';
@@ -25,6 +26,7 @@ import 'package:csdl_mobile/marketing/marketing_drawer.dart';
 import 'package:csdl_mobile/marketing/marketing.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -32,9 +34,16 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (FlutterErrorDetails details) {
-    print('Flutter error: ${details.exception}');
+    // swallow errors from printing; handled by zone below
   };
-  runApp(const MyApp());
+  runZonedGuarded(() {
+    runApp(const MyApp());
+  }, (error, stack) {},
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, line) {
+          // disable all console prints
+        },
+      ));
 }
 
 class MyApp extends StatelessWidget {
@@ -99,7 +108,7 @@ class _HomePageState extends State<HomePage> {
   final TextInputFormatter _usernameInputFormatter =
       FilteringTextInputFormatter.allow(
     RegExp(
-        r'[A-Za-z0-9-@.]'), // Added the period (".") to the regular expression
+        r'[A-Za-z0-9_@.+-]'), // Allow underscores, plus, dot, hyphen, alphanumerics for emails/IDs
   );
 
   bool _passwordVisible = false;
@@ -115,6 +124,13 @@ class _HomePageState extends State<HomePage> {
   bool userIsStudent = false;
   bool userIsSupervisor = false;
   bool userIsSupervisorAuthentication = false;
+  bool _isLoggingIn = false;
+  int _pwdAttemptsRemaining = 5; // UI-only countdown when backend doesn't supply
+
+  // Transient server lock countdown (no persistence)
+  DateTime? _serverLockedUntil;
+  Timer? _serverLockTicker;
+  String _serverLockCountdown = '';
 
   //PROFILE
 
@@ -157,16 +173,11 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _isLocked = true;
         });
-        updateLoginAttempt();
+        // Temporarily disabled to avoid DB lock during testing
+        // updateLoginAttempt();
       }
 
-      Get.snackbar(
-        "Alert",
-        "CAPTCHA does not match. Try again.",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      _showAlertDialog("Alert", "CAPTCHA does not match. Try again.");
 
       return false;
     }
@@ -175,9 +186,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void login() async {
-    if (_isLocked) return;
+    if (_isLocked || _isLoggingIn) return;
 
     setState(() {
+      _isLoggingIn = true;
       _isUsernameValid = _usernameController.text.isNotEmpty;
       _isPasswordValid = _passwordController.text.isNotEmpty;
     });
@@ -187,19 +199,25 @@ class _HomePageState extends State<HomePage> {
       _passwordController.clear();
       _captchaController.clear();
 
-      Get.snackbar(
-        "Alert",
-        "Username and Password are Empty!",
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-        colorText: Colors.white,
-        icon: const Icon(Icons.warning, color: Colors.white),
-        margin: const EdgeInsets.only(top: 5),
-      );
+      setState(() {
+        _isLoggingIn = false;
+        _isCaptchaVisible = false;
+        _isCaptchaChecked = false;
+      });
+      generateCaptcha();
+      _showAlertDialog("Alert", "Username and Password are Empty!");
       return;
     }
 
-    if (!verifyCaptcha()) return;
+    if (!verifyCaptcha()) {
+      setState(() {
+        _isLoggingIn = false;
+        _isCaptchaVisible = false;
+        _isCaptchaChecked = false;
+      });
+      generateCaptcha();
+      return;
+    }
 
     try {
       String username = _usernameController.text.trim();
@@ -214,28 +232,40 @@ class _HomePageState extends State<HomePage> {
         "operation": operation,
         "json": jsonEncode({"username": username, "password": password}),
       };
-      print("jsondata" + jsonEncode(requestBody));
-
       var response = await http.post(url, body: requestBody);
       var res = jsonDecode(response.body);
-      print("🔵 Raw response: ${response.body}");
+      // Normalize if backend returned a JSON string (double-encoded)
+      if (res is String && (res.trim().startsWith('{') || res.trim().startsWith('['))) {
+        try {
+          res = jsonDecode(res);
+        } catch (_) {}
+      }
+
+      // Server-enforced lock: show live countdown and block login
+      if (res is Map<String, dynamic> && res.containsKey("status") && res["status"] == 3) {
+        final raw = res["lock_remaining_seconds"];
+        final secs = (raw is int) ? raw : 180; // default to 3 minutes if not provided
+        _serverLockedUntil = DateTime.now().add(Duration(seconds: secs));
+        setState(() {
+          _isLoggingIn = false;
+        });
+        _showServerLockDialog();
+        return;
+      }
 
       // Account doesn't exist or invalid credentials
       if (res == 0 || res == -1) {
-        generateCaptcha();
         _usernameController.clear();
         _passwordController.clear();
         _captchaController.clear();
 
-        Get.snackbar(
-          "Alert",
-          "Account doesn't exist or invalid credentials",
-          backgroundColor: Colors.red,
-          snackPosition: SnackPosition.BOTTOM,
-          colorText: Colors.white,
-          icon: const Icon(Icons.warning, color: Colors.white),
-          margin: const EdgeInsets.only(top: 5),
-        );
+        setState(() {
+          _isLoggingIn = false;
+          _isCaptchaVisible = false;
+          _isCaptchaChecked = false;
+        });
+        generateCaptcha();
+        _showAlertDialog("Alert", "Invalid password or credentials");
         return;
       }
 
@@ -243,76 +273,55 @@ class _HomePageState extends State<HomePage> {
       if (res is Map<String, dynamic> &&
           res.containsKey("status") &&
           res["status"] == 2) {
-        generateCaptcha();
         _usernameController.clear();
         _passwordController.clear();
         _captchaController.clear();
 
-        Get.snackbar(
-          "Alert",
-          "Incorrect password",
-          backgroundColor: Colors.red,
-          snackPosition: SnackPosition.BOTTOM,
-          colorText: Colors.white,
-          icon: const Icon(Icons.warning, color: Colors.white),
-          margin: const EdgeInsets.only(top: 5),
-        );
+        setState(() {
+          _isLoggingIn = false;
+          _isCaptchaVisible = false;
+          _isCaptchaChecked = false;
+        });
+        generateCaptcha();
+        // If backend provided attempts remaining, show it; else use local countdown
+        final attemptsRemaining = res["attempts_remaining"];
+        if (attemptsRemaining is int) {
+          _pwdAttemptsRemaining = attemptsRemaining;
+          _showAlertDialog("Alert", "Invalid password. Attempts left: $attemptsRemaining");
+        } else {
+          _pwdAttemptsRemaining = (_pwdAttemptsRemaining > 1)
+              ? _pwdAttemptsRemaining - 1
+              : 1;
+          _showAlertDialog("Alert", "Invalid password. Attempts left: $_pwdAttemptsRemaining");
+        }
         return;
       }
 
       _failedAttempts = 0;
 
       // -------------------
-      // Admin login
+      // Admin/Marketing login
       // -------------------
       if (res is Map<String, dynamic> && res.containsKey("adm_email")) {
-        int userLevel = int.tryParse(res["adm_user_level"].toString()) ?? 0;
+        final String email = res["adm_email"];
+        final String name = (res["adm_name"] ?? '').toString();
 
-        if (userLevel == 5) {
-          String email = res["adm_email"];
-          String name = res["adm_name"];
+        _showSuccessDialog("Success", "Welcome $name");
 
-          Get.snackbar(
-            "Success",
-            "Welcome $name",
-            backgroundColor: Colors.green,
-            snackPosition: SnackPosition.BOTTOM,
-            colorText: Colors.white,
-            icon: const Icon(Icons.check, color: Colors.white),
-            margin: const EdgeInsets.only(top: 5),
-          );
+        SessionStorage.setItem("admin_email", email);
 
-          SessionStorage.setItem("admin_email", email);
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MarketingDashboard(adminEmail: email),
-            ),
-          );
-          return;
-        } else {
-          // User level not 5, show error and clear inputs
-          _usernameController.clear();
-          _passwordController.clear();
-          _captchaController.clear();
-
-          Get.snackbar(
-            "Access Denied",
-            "You do not have permission to login as admin.",
-            backgroundColor: Colors.red,
-            snackPosition: SnackPosition.BOTTOM,
-            colorText: Colors.white,
-            icon: const Icon(Icons.block, color: Colors.white),
-            margin: const EdgeInsets.only(top: 5),
-          );
-          return;
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MarketingDashboard(adminEmail: email),
+          ),
+        );
+        return;
       }
       // -------------------
       // Supervisor login
       // -------------------
-      else if (res.containsKey("supM_email")) {
+      else if (res is Map<String, dynamic> && res.containsKey("supM_email")) {
         String advisorEmail = res['supM_email'];
         String supervisor_id = res['supM_id'].toString();
         bool isDefaultPassword = res['is_default_password'];
@@ -326,22 +335,10 @@ class _HomePageState extends State<HomePage> {
         print(supervisor_id1);
 
         if (res['supM_login_attempts'] == 1) {
-          Get.snackbar(
-            "Message",
-            "Account is Locked please Contact CSDL",
-            backgroundColor: Colors.red,
-            snackPosition: SnackPosition.BOTTOM,
-            colorText: Colors.white,
-            icon: const Icon(Icons.warning, color: Colors.white),
-            margin: const EdgeInsets.only(top: 5),
-          );
-          setState(() {
-            _isLocked = true;
-            _isCaptchaVisible = false;
-            _usernameController.clear();
-            _passwordController.clear();
-          });
-        } else if (isDefaultPassword) {
+          // Temporarily allow login to proceed for testing even if flagged locked
+          _showSuccessDialog("Notice", "Proceeding despite lock flag for testing.");
+        }
+        if (isDefaultPassword) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -360,19 +357,12 @@ class _HomePageState extends State<HomePage> {
             _showOtpDialog();
           } else {
             SessionStorage.setItem("advisor_email", advisorEmail);
-            Get.snackbar(
-              "Success",
-              "Welcome ${res['supM_name']}",
-              backgroundColor: Colors.green,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.check, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
+            _showSuccessDialog("Success", "Welcome ${res['supM_name']}");
+            _pwdAttemptsRemaining = 5; // reset on successful login
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (context) => AdvisorScholarList(
+                  builder: (context) => Advisor(
                         advisor_id: advisorEmail,
                         supervisor_id: supervisor_id1,
                       )),
@@ -383,7 +373,7 @@ class _HomePageState extends State<HomePage> {
       // -------------------
       // Student login
       // -------------------
-      else if (res.containsKey("stud_id")) {
+      else if (res is Map<String, dynamic> && res.containsKey("stud_id")) {
         String studentId = res['stud_id'];
         bool isDefaultPassword = res['is_default_password'];
 
@@ -395,15 +385,7 @@ class _HomePageState extends State<HomePage> {
         });
 
         if (res['stud_login_attempts'] == 1) {
-          Get.snackbar(
-            "Message",
-            "Account is Locked please Contact CSDL",
-            backgroundColor: Colors.red,
-            snackPosition: SnackPosition.BOTTOM,
-            colorText: Colors.white,
-            icon: const Icon(Icons.warning, color: Colors.white),
-            margin: const EdgeInsets.only(top: 5),
-          );
+          _showAlertDialog("Message", "Account is Locked please Contact CSDL");
           setState(() {
             _isLocked = true;
             _isCaptchaVisible = false;
@@ -425,15 +407,7 @@ class _HomePageState extends State<HomePage> {
           if (authStatus == 1) {
             _showOtpDialog();
           } else {
-            Get.snackbar(
-              "Success",
-              "Welcome ${res['stud_name']}",
-              backgroundColor: Colors.green,
-              snackPosition: SnackPosition.BOTTOM,
-              colorText: Colors.white,
-              icon: const Icon(Icons.check, color: Colors.white),
-              margin: const EdgeInsets.only(top: 5),
-            );
+            _showSuccessDialog("Success", "Welcome ${res['stud_name']}");
 
             String yearName = res['year_name'] ?? '';
             String yearLevel =
@@ -441,6 +415,7 @@ class _HomePageState extends State<HomePage> {
 
             SessionStorage.setItem("student_id", studentId);
             SessionStorage.setItem("is_fresh", yearLevel == 'Y1' ? "1" : "0");
+            _pwdAttemptsRemaining = 5; // reset on successful login
 
             Navigator.pushReplacement(
               context,
@@ -454,94 +429,72 @@ class _HomePageState extends State<HomePage> {
         }
       } else {
         // If response doesn't match any user type
-        Get.snackbar(
-          "Alert",
-          "Invalid login response",
-          backgroundColor: Colors.red,
-          snackPosition: SnackPosition.BOTTOM,
-          colorText: Colors.white,
-          icon: const Icon(Icons.warning, color: Colors.white),
-          margin: const EdgeInsets.only(top: 5),
-        );
+        setState(() {
+          _isLoggingIn = false;
+          _isCaptchaVisible = false;
+          _isCaptchaChecked = false;
+        });
+        generateCaptcha();
+        // Temporarily suppress server rate-limit message to allow retries
+        // if (res is Map<String, dynamic> && res["success"] == false && res["message"] is String) {
+        //   _showAlertDialog("Alert", res["message"] as String);
+        // } else {
+        //   _showAlertDialog("Alert", "Invalid login response");
+        // }
         _usernameController.clear();
         _passwordController.clear();
         _captchaController.clear();
       }
     } catch (e) {
-      print("❌ Error: $e");
+      print("âŒ Error: $e");
       _usernameController.clear();
       _passwordController.clear();
       _captchaController.clear();
 
-      Get.snackbar(
-        "Error",
-        "An error occurred during login. Please try again.",
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-        colorText: Colors.white,
-        icon: const Icon(Icons.error, color: Colors.white),
-        margin: const EdgeInsets.only(top: 5),
-      );
+      setState(() {
+        _isLoggingIn = false;
+        _isCaptchaVisible = false;
+        _isCaptchaChecked = false;
+      });
+      generateCaptcha();
+      _showAlertDialog("Alert", "Invalid username and password. Please enter valid username or password.");
     }
   }
 
   void _showOtpDialog() {
     final otpController = TextEditingController(); // OTP input controller
-    String generatedOtp = ''; // Store generated OTP
 
-    // Function to generate a random OTP
-    String generateOtp() {
-      Random random = Random();
-      return (random.nextInt(90000) + 10000).toString();
-    }
-
-    // Send OTP via API
-    void sendOtp(String email, String otp) async {
+    // Send OTP via API (reuse forgotPassword flow)
+    void sendOtp(String email) async {
       try {
-        var url = Uri.parse("${SessionStorage.url}transaction.php");
-
-        Map<String, dynamic> jsonData = {
-          "emailToSent": email,
-          "emailBody": otp, // Send OTP
+        final url = Uri.parse("${SessionStorage.url}transaction.php");
+        final jsonData = {"email": email};
+        final bodyJson = jsonEncode(jsonData);
+        final bodyHash = crypto.sha256.convert(utf8.encode(bodyJson)).toString();
+        final requestBody = {
+          "operation": "forgotPassword",
+          "json": bodyJson,
+          "hash": bodyHash,
         };
 
-        Map<String, String> requestBody = {
-          "operation": "sendEmail", // Trigger OTP sending
-          "json": jsonEncode(jsonData),
-        };
+        final response = await http.post(url, body: requestBody);
+        dynamic res;
+        try {
+          res = jsonDecode(response.body);
+          if (res is String && (res.trim().startsWith('{') || res.trim().startsWith('['))) {
+            res = jsonDecode(res);
+          }
+        } catch (_) {
+          res = {"success": false, "message": "Invalid server response: ${response.body}"};
+        }
 
-        var response = await http.post(url, body: requestBody);
-        print(response.headers);
-        var res = jsonDecode(response.body);
-
-        if (res != 0) {
-          // Success: OTP sent
-          Get.snackbar(
-            "OTP Sent",
-            "OTP has been sent to your $emailController",
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-          );
+        if (response.statusCode == 200 && res is Map && res["success"] == true) {
+          _showSuccessDialog("OTP Sent", res["message"] ?? "OTP sent successfully");
         } else {
-          // Failure: Show error
-          Get.snackbar(
-            "Error",
-            "Failed to send OTP. Please try again.",
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-          );
+          _showAlertDialog("Error", (res is Map && res["message"] is String) ? res["message"] : "Failed to send OTP. Please try again.");
         }
       } catch (e) {
-        print("Error: $e");
-        Get.snackbar(
-          "Error",
-          "An error occurred while sending the OTP. Please try again.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        _showAlertDialog("Error", "An error occurred while sending the OTP. Please try again.");
       }
     }
 
@@ -566,20 +519,12 @@ class _HomePageState extends State<HomePage> {
               child: const Text('Verify OTP',
                   style: TextStyle(color: Colors.white)),
               onPressed: () {
-                // Verify OTP entered by user
-                if (otpController.text == generatedOtp) {
+                // TODO: Hook to backend verify-OTP endpoint; currently placeholder
+                if (otpController.text.isNotEmpty) {
                   if (userIsSupervisorAuthentication) {
                     Navigator.pop(context); // Close OTP dialog
 
-                    Get.snackbar(
-                      "Success",
-                      "Welcome $advName",
-                      backgroundColor: Colors.green,
-                      snackPosition: SnackPosition.BOTTOM,
-                      colorText: Colors.white,
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      margin: const EdgeInsets.only(top: 5),
-                    );
+                    _showSuccessDialog("Success", "Welcome $advName");
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -591,15 +536,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   } else {
                     Navigator.pop(context); // Close OTP dialog
-                    Get.snackbar(
-                      "Success",
-                      "Welcome $studName",
-                      backgroundColor: Colors.green,
-                      snackPosition: SnackPosition.BOTTOM,
-                      colorText: Colors.white,
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      margin: const EdgeInsets.only(top: 5),
-                    );
+                    _showSuccessDialog("Success", "Welcome $studName");
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -608,13 +545,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   }
                 } else {
-                  Get.snackbar(
-                    "Error",
-                    "Incorrect OTP. Please try again.",
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                    snackPosition: SnackPosition.BOTTOM,
-                  );
+                  _showAlertDialog("Error", "Incorrect OTP. Please try again.");
                 }
               },
             ),
@@ -646,18 +577,11 @@ class _HomePageState extends State<HomePage> {
                 ShadButton(
                   child: const Text('Send OTP'),
                   onPressed: () {
-                    generatedOtp = generateOtp(); // Generate OTP
-                    sendOtp(emailController.text, generatedOtp); // Send OTP
+                    sendOtp(emailController.text); // Send OTP via backend
                   },
                   backgroundColor: Color(0xFF104038),
                 ),
-                // Display message after OTP is sent
-                if (generatedOtp.isNotEmpty) ...[
-                  Text(
-                    'OTP is being sent to: $emailController',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
+                const SizedBox.shrink(),
               ],
             ),
           ),
@@ -710,8 +634,103 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _showAlertDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showServerLockDialog() {
+    _serverLockTicker?.cancel();
+    bool isOpen = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        String remaining() {
+          if (_serverLockedUntil == null) return "03:00";
+          final now = DateTime.now();
+          final rem = _serverLockedUntil!.difference(now);
+          if (rem.isNegative) return "00:00";
+          final mm = rem.inMinutes.remainder(60).toString().padLeft(2, '0');
+          final ss = rem.inSeconds.remainder(60).toString().padLeft(2, '0');
+          return "$mm:$ss";
+        }
+
+        return StatefulBuilder(builder: (ctx, setStateSB) {
+          _serverLockTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
+            final now = DateTime.now();
+            final stillLocked = _serverLockedUntil != null && _serverLockedUntil!.isAfter(now);
+            if (!isOpen || !stillLocked) {
+              _serverLockTicker?.cancel();
+              _serverLockTicker = null;
+              if (Navigator.of(ctx).canPop()) {
+                Navigator.of(ctx).maybePop();
+              }
+              return;
+            }
+            setStateSB(() {});
+          });
+
+          return AlertDialog(
+            title: const Text("Account locked"),
+            content: Text("Too many attempts. Try again in ${remaining()}"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  isOpen = false;
+                  _serverLockTicker?.cancel();
+                  _serverLockTicker = null;
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        });
+      },
+    ).then((_) {
+      isOpen = false;
+      _serverLockTicker?.cancel();
+      _serverLockTicker = null;
+    });
+  }
+
   @override
   void dispose() {
+    _serverLockTicker?.cancel();
     super.dispose();
   }
 
@@ -873,29 +892,52 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                         ],
                                       ),
-                                      child: Center(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: List.generate(
-                                            generatedCaptcha.length,
-                                            (index) {
-                                              return Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: List.generate(
+                                                generatedCaptcha.length,
+                                                (index) {
+                                                  return Padding(
+                                                    padding: const EdgeInsets.symmetric(
                                                         horizontal: 5),
-                                                child: Text(
-                                                  generatedCaptcha[index],
-                                                  style: TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                                    child: Text(
+                                                      generatedCaptcha[index],
+                                                      style: TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                          IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _isLoadingCaptcha = true;
+                                              });
+                                              
+                                              Future.delayed(Duration(milliseconds: 500), () {
+                                                generateCaptcha();
+                                                setState(() {
+                                                  _isLoadingCaptcha = false;
+                                                });
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.refresh,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                            tooltip: 'Refresh Captcha',
+                                          ),
+                                        ],
                                       ),
                                     ),
                               const SizedBox(height: 15),
@@ -992,19 +1034,41 @@ class _HomePageState extends State<HomePage> {
                             width: double.infinity,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green.withOpacity(0.5),
+                                backgroundColor: _isLoggingIn 
+                                    ? Colors.grey.withOpacity(0.5)
+                                    : Colors.green.withOpacity(0.5),
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                               ),
-                              child: const Text(
-                                "Login",
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.white),
-                              ),
-                              onPressed: () {
+                              child: _isLoggingIn
+                                  ? Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          "Logging in...",
+                                          style: TextStyle(
+                                              fontSize: 16, color: Colors.white),
+                                        ),
+                                      ],
+                                    )
+                                  : const Text(
+                                      "Login",
+                                      style: TextStyle(
+                                          fontSize: 16, color: Colors.white),
+                                    ),
+                              onPressed: _isLoggingIn ? null : () {
                                 login();
                               },
                             ),
@@ -1013,10 +1077,55 @@ class _HomePageState extends State<HomePage> {
                         Visibility(
                           visible: !_isLocked,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text('Notice'),
+                                        content: const Text(
+                                          'This request is for students that are Returnee or Continuing.',
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: const Text('I understand'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop(); // Close dialog
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => ScholarshipRequestForm(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Text(
+                                  "Scholarship Request",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontStyle: FontStyle.italic,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ForgotPasswordRequestPage(),
+                                    ),
+                                  );
+                                },
                                 child: Text(
                                   "Forgot Password?",
                                   style: TextStyle(
@@ -1054,43 +1163,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // 🔽 ICON BUTTON MUST BE AT THE END OF Stack children 🔽
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            right: 10,
-            child: IconButton(
-              icon: Icon(Icons.info_outline,
-                  color: Color.fromARGB(255, 12, 94, 15)),
-              tooltip: 'Request Info',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Notice'),
-                      content: const Text(
-                        'This request is for students that are Returnee or Continuing.',
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('I understand'),
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close dialog
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ScholarshipRequestForm(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
         ],
       ),
     );

@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csdl_mobile/session_storage.dart';
 
-class AnnouncementsPage extends StatefulWidget {
-  final String student_id;
+class MarketingAnnouncementPage extends StatefulWidget {
+  final String adminEmail;
 
-  const AnnouncementsPage({
+  const MarketingAnnouncementPage({
     Key? key,
-    required this.student_id,
+    required this.adminEmail,
   }) : super(key: key);
 
   @override
-  State<AnnouncementsPage> createState() => _AnnouncementsPageState();
+  State<MarketingAnnouncementPage> createState() => _MarketingAnnouncementPageState();
 }
 
-class _AnnouncementsPageState extends State<AnnouncementsPage> {
+class _MarketingAnnouncementPageState extends State<MarketingAnnouncementPage> {
   List<dynamic> announcements = [];
   bool isLoading = true;
 
@@ -32,14 +32,24 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       Map<String, String> requestBody = {
         "operation": "getAnnouncement",
         "json": jsonEncode({
-          "student_id": widget.student_id,
+          "admin_email": widget.adminEmail,
         }),
       };
 
+      // print("ðŸ” Marketing Announcement API Call:");
+      // print("URL: $url");
+      // print("Request Body: $requestBody");
+
       var response = await http.post(url, body: requestBody);
+
+      // print("Response Status: ${response.statusCode}");
+      // print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
+        // print("Parsed Response: $res");
+        // print("Response Type: ${res.runtimeType}");
+        // print("Response Length: ${res is List ? res.length : 'Not a list'}");
 
         setState(() {
           announcements = res;
@@ -53,11 +63,13 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       }
     } catch (e) {
       setState(() => isLoading = false);
+      // print("Error fetching announcements: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +125,6 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                           itemCount: announcements.length,
                           itemBuilder: (context, index) {
                             var announcement = announcements[index];
-
                             return Card(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),

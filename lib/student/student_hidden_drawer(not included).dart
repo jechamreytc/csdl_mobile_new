@@ -1,4 +1,4 @@
-// import 'dart:convert';
+﻿// import 'dart:convert';
 // import 'package:csdl_mobile/main.dart';
 // import 'package:csdl_mobile/session_storage.dart';
 // import 'package:csdl_mobile/student/request_schedule.dart';
@@ -93,7 +93,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "📋 Duty Assignment",
+//           name: "ðŸ“‹ Duty Assignment",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,
@@ -112,7 +112,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "⏰ Daily Time Record",
+//           name: "â° Daily Time Record",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,
@@ -133,7 +133,7 @@
 //     //         selectedStyle: const TextStyle(
 //     //           color: Colors.black,
 //     //         ),
-//     //         name: "📝 Request Schedule",
+//     //         name: "ðŸ“ Request Schedule",
 //     //         baseStyle: const TextStyle(
 //     //           color: Colors.black,
 //     //           fontSize: 12.0,
@@ -153,7 +153,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "⚙️ Account Settings",
+//           name: "âš™ï¸ Account Settings",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,

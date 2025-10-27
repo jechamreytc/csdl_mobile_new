@@ -44,7 +44,6 @@ class _AdvisorDayAssignmentsState extends State<AdvisorDayAssignments> {
 
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
-        print("Day Assignments API Response: $res");
         if (res != 0) {
           setState(() {
             _scholars = res;
@@ -79,12 +78,11 @@ class _AdvisorDayAssignmentsState extends State<AdvisorDayAssignments> {
       organizedScholars[day] = [];
     }
 
-    print("Total scholars to organize: ${_scholars.length}");
+    
     
     // Organize scholars by day
     for (var scholar in _scholars) {
       String dayName = scholar['day_name']?.toString() ?? 'Monday';
-      print("Scholar: ${scholar['Fullname']?.toString() ?? 'Unknown'}, Day: $dayName, Assignment: ${scholar['assignment_name']?.toString() ?? 'Unknown'}");
       
       // Ensure the day name is properly capitalized and matches our list
       String normalizedDayName = _normalizeDayName(dayName);
@@ -94,14 +92,10 @@ class _AdvisorDayAssignmentsState extends State<AdvisorDayAssignments> {
       } else {
         // If day doesn't match, add to Monday as default
         organizedScholars['Monday']!.add(scholar);
-        print("Added ${scholar['Fullname']?.toString() ?? 'Unknown'} to Monday (default)");
       }
     }
 
-    // Print organization results
-    organizedScholars.forEach((day, scholars) {
-      print("$day: ${scholars.length} scholars");
-    });
+    
 
     return organizedScholars;
   }

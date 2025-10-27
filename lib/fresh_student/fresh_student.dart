@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:csdl_mobile/fresh_student/fresh_student_drawer.dart';
 import 'package:csdl_mobile/session_storage.dart';
@@ -96,7 +96,7 @@ class _FreshStudentState extends State<FreshStudent> {
               children: [
                 const SizedBox(height: 10),
                 const Text(
-                  "DASHBOARD",
+                  "WELCOME",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF104038),
@@ -318,9 +318,9 @@ class _FreshStudentState extends State<FreshStudent> {
         });
       }
 
-      print("Total Referrals: $res");
+      // print("Total Referrals: $res");
     } catch (e) {
-      print("Error fetching total referrals: $e");
+      // print("Error fetching total referrals: $e");
     }
   }
 
@@ -448,7 +448,7 @@ class _FreshStudentState extends State<FreshStudent> {
         });
       }
     } catch (e) {
-      print("Error fetching approved referrals count: $e");
+      // print("Error fetching approved referrals count: $e");
     }
   }
 }

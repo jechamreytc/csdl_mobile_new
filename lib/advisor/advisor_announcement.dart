@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csdl_mobile/session_storage.dart';
 
-class AnnouncementsPage extends StatefulWidget {
-  final String student_id;
+class AdvisorAnnouncementsPage extends StatefulWidget {
+  final String advisor_id;
 
-  const AnnouncementsPage({
+  const AdvisorAnnouncementsPage({
     Key? key,
-    required this.student_id,
+    required this.advisor_id,
   }) : super(key: key);
 
   @override
-  State<AnnouncementsPage> createState() => _AnnouncementsPageState();
+  State<AdvisorAnnouncementsPage> createState() => _AdvisorAnnouncementsPageState();
 }
 
-class _AnnouncementsPageState extends State<AnnouncementsPage> {
+class _AdvisorAnnouncementsPageState extends State<AdvisorAnnouncementsPage> {
   List<dynamic> announcements = [];
   bool isLoading = true;
 
@@ -32,7 +32,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       Map<String, String> requestBody = {
         "operation": "getAnnouncement",
         "json": jsonEncode({
-          "student_id": widget.student_id,
+          "advisor_id": widget.advisor_id,
         }),
       };
 

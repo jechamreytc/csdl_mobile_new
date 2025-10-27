@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:math';
 import 'package:csdl_mobile/session_storage.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
   String fullName = '';
   int authenticationStatus = 0;
   String currentPassword = '';
+  String supervisorId = '';
   bool isButtonDisabled = false;
   bool isTwoFactorEnabled = false; // Track the state of the switch
   List<dynamic> assignments = [];
@@ -117,12 +119,12 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
 
                   // Action Buttons
                   Row(
-                children: [
+                    children: [
                       Expanded(
                         child: ShadButton(
                           child: const Text('Change Password'),
                           onPressed: () {
-                            _showOtpDialog(isForPasswordChange: true);
+                            _showChangePasswordDialog();
                           },
                         ),
                       ),
@@ -131,11 +133,7 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
                         child: ShadButton(
                           child: Text(authenticationStatus == 1 ? 'Disable 2FA' : 'Enable 2FA'),
                           onPressed: () {
-                            if (authenticationStatus == 1) {
-                              _showOtpDialog(isForPasswordChange: false, isForDisabling2FA: true);
-                            } else {
-                              _showOtpDialog(isForPasswordChange: false);
-                            }
+                            _showOtpDialogForTwoFactor(enable: authenticationStatus != 1);
                           },
                         ),
                       ),
@@ -277,20 +275,17 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
       };
 
       var response = await http.post(url, body: requestBody);
-      print("API Response Status: ${response.statusCode}");
-      print("API Response Body: ${response.body}");
       
       var res = jsonDecode(response.body);
-      print("Parsed Response: $res");
       
       if (res is Map && res['success'] == true && res['data'] != null) {
-        print("Success response with data, processing...");
         var data = res['data'];
         if (mounted) {
           setState(() {
             // Basic profile information - only name and email
             fullName = data['supM_name']?.toString() ?? '';
             email = data['supM_email']?.toString() ?? '';
+            supervisorId = data['supM_id']?.toString() ?? '';
             currentPassword = data['supM_password']?.toString() ?? ''; // Save current password
             
             // Security information
@@ -298,10 +293,8 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
             
             isLoading = false;
           });
-          print("Set state completed. Full Name: $fullName, Email: $email");
         }
       } else {
-        print("No data found or error in response");
         if (mounted) {
           setState(() {
             isLoading = false;
@@ -309,7 +302,6 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
     }
   }
 
@@ -325,17 +317,13 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
       };
 
       var response = await http.post(url, body: requestBody);
-      print("Assignments API Response Status: ${response.statusCode}");
-      print("Assignments API Response Body: ${response.body}");
       
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
-        print("Raw assignments data: $res");
         
         if (mounted) {
           setState(() {
             if (res != 0) {
-              print("Total assignments before deduplication: ${res.length}");
               
               // Remove duplicates based on unique combination of assignment details
               List<dynamic> uniqueAssignments = [];
@@ -344,17 +332,14 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
               for (var assignment in res) {
                 // Create a unique key based on assignment details
                 String uniqueKey = "${assignment['assignment_name']}_${assignment['dept_name']}_${assignment['build_name']}_${assignment['dutyH_name']}";
-                print("Assignment key: $uniqueKey");
                 
                 if (!seenAssignments.contains(uniqueKey)) {
                   seenAssignments.add(uniqueKey);
                   uniqueAssignments.add(assignment);
                 } else {
-                  print("Duplicate assignment found: $uniqueKey");
                 }
               }
               
-              print("Unique assignments after deduplication: ${uniqueAssignments.length}");
               assignments = uniqueAssignments;
             } else {
               assignments = [];
@@ -363,7 +348,6 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error fetching supervisor assignments: $e");
       if (mounted) {
         setState(() {
           assignments = [];
@@ -427,7 +411,6 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
           );
         }
       } catch (e) {
-        print("Error: $e");
         Get.snackbar(
           "Error",
           "An error occurred while sending the OTP. Please try again.",
@@ -533,128 +516,136 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    bool hasNumber = false;
+    bool hasLetter = false;
+    bool hasSymbol = false;
+    bool hasUpperAndLower = false;
 
-    // Validation function for the fields
-    bool validateFields() {
-      if (currentPasswordController.text.isEmpty) {
-        Get.snackbar(
-          "Error",
-          "Current Password cannot be empty.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return false;
-      } else if (newPasswordController.text.isEmpty) {
-        Get.snackbar(
-          "Error",
-          "New Password cannot be empty.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return false;
-      } else if (confirmPasswordController.text.isEmpty) {
-        Get.snackbar(
-          "Error",
-          "Confirm Password cannot be empty.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return false;
-      } else if (newPasswordController.text != confirmPasswordController.text) {
-        Get.snackbar(
-          "Error",
-          "New Password and Confirm Password do not match.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return false;
-      }
-      return true;
+    void validatePassword(String password, void Function(void Function()) setState) {
+      hasNumber = password.contains(RegExp(r'[0-9]'));
+      hasLetter = password.contains(RegExp(r'[a-zA-Z]'));
+      hasSymbol = password.contains(RegExp(r'[!@#\$%\^&\*(),.?":{}|<>]'));
+      hasUpperAndLower = password.contains(RegExp(r'[a-z]')) && password.contains(RegExp(r'[A-Z]'));
+      setState(() {});
     }
 
-    // Show the Change Password dialog
     showShadDialog(
       context: context,
       builder: (context) => Padding(
         padding: const EdgeInsets.all(30.0),
-        child: ShadDialog(
-          title: const Text('Change Password',
-              style: TextStyle(color: Colors.white)),
-          actions: [
-            ShadButton(
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.black)),
-              onPressed: () {
-                Navigator.pop(
-                    context); // Close the dialog without changing the password
-              },
-            ),
-            ShadButton(
-              child: const Text('Save Changes',
-                  style: TextStyle(color: Colors.black)),
-              onPressed: () {
-                // Validate fields before proceeding
-                if (validateFields()) {
-                  _updatePassword(currentPasswordController.text,
-                      newPasswordController.text);
-                  Navigator.pop(context); // Close the dialog
-                }
-              },
-            ),
-          ],
-          child: Container(
-            width: 280,
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Current Password Field
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Current Password',
-                        style: TextStyle(color: Colors.white)),
-                    const SizedBox(height: 4),
-                    ShadInput(
-                        controller: currentPasswordController,
-                        obscureText: true),
-                  ],
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return ShadDialog(
+              title: const Text('Change Password', style: TextStyle(color: Colors.white)),
+              actions: [
+                ShadButton(
+                  backgroundColor: const Color(0xFF104038),
+                  child: const Text('Save', style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    if (currentPasswordController.text.isEmpty ||
+                        newPasswordController.text.isEmpty ||
+                        confirmPasswordController.text.isEmpty) {
+                      Get.snackbar('Error', 'All fields are required!', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      return;
+                    }
+                    if (newPasswordController.text != confirmPasswordController.text) {
+                      Get.snackbar('Error', 'New password and confirm password must match.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      return;
+                    }
+                    if (newPasswordController.text.length < 8 || newPasswordController.text.length > 20) {
+                      Get.snackbar('Error', 'Password must be 8â€“20 characters long.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      return;
+                    }
+                    if (!hasNumber || !hasLetter || !hasSymbol || !hasUpperAndLower) {
+                      Get.snackbar('Error', 'Password must include: number, letter, symbol, uppercase & lowercase.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      return;
+                    }
+                    Navigator.pop(context);
+                    _showOtpDialogForPasswordChange(currentPasswordController.text, newPasswordController.text);
+                  },
                 ),
-                const SizedBox(height: 12),
-                // New Password Field
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('New Password',
-                        style: TextStyle(color: Colors.white)),
-                    const SizedBox(height: 4),
-                    ShadInput(
-                        controller: newPasswordController, obscureText: true),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Confirm New Password Field
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Confirm New Password',
-                        style: TextStyle(color: Colors.white)),
-                    const SizedBox(height: 4),
-                    ShadInput(
-                        controller: confirmPasswordController,
-                        obscureText: true),
-                  ],
+                ShadButton(
+                  backgroundColor: const Color(0xFF104038),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
-            ),
-          ),
+              child: Container(
+                width: 300,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ShadInput(
+                      controller: currentPasswordController,
+                      placeholder: const Text('Current Password'),
+                      obscureText: obscureCurrent,
+                      leading: const Padding(padding: EdgeInsets.all(4.0), child: Icon(Icons.lock)),
+                      trailing: IconButton(
+                        icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => obscureCurrent = !obscureCurrent),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ShadInput(
+                      controller: newPasswordController,
+                      placeholder: const Text('New Password'),
+                      obscureText: obscureNew,
+                      leading: const Padding(padding: EdgeInsets.all(4.0), child: Icon(Icons.lock_outline)),
+                      trailing: IconButton(
+                        icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => obscureNew = !obscureNew),
+                      ),
+                      onChanged: (val) => validatePassword(val, setState),
+                    ),
+                    const SizedBox(height: 12),
+                    ShadInput(
+                      controller: confirmPasswordController,
+                      placeholder: const Text('Confirm New Password'),
+                      obscureText: obscureConfirm,
+                      leading: const Padding(padding: EdgeInsets.all(4.0), child: Icon(Icons.lock_outline)),
+                      trailing: IconButton(
+                        icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => obscureConfirm = !obscureConfirm),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildValidationItem('At least 8 characters', newPasswordController.text.length >= 8),
+                          _buildValidationItem('Max 20 characters', newPasswordController.text.isNotEmpty && newPasswordController.text.length <= 20),
+                          _buildValidationItem('At least one number', hasNumber),
+                          _buildValidationItem('At least one letter', hasLetter),
+                          _buildValidationItem('At least one symbol', hasSymbol),
+                          _buildValidationItem('Uppercase and lowercase letters', hasUpperAndLower),
+                          _buildValidationItem('Matches confirm password', newPasswordController.text.isNotEmpty && newPasswordController.text == confirmPasswordController.text),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildValidationItem(String text, bool isValid) {
+    return Row(
+      children: [
+        Icon(isValid ? Icons.check_circle : Icons.cancel, size: 16, color: isValid ? Colors.green : Colors.red),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(color: isValid ? Colors.green : Colors.red, fontSize: 12)),
+      ],
     );
   }
 
@@ -673,18 +664,16 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
 
     var url = Uri.parse("${SessionStorage.url}transaction.php");
     Map<String, dynamic> jsonData = {
-      "supM_id": widget.advisor_id,
+      "supM_id": supervisorId,
       "supM_currentPassword":
           currentPassword, // Send current password to verify
       "supM_password": newPassword, // New password for update
     };
 
     Map<String, String> requestBody = {
-      "operation": "verifyAndUpdateAdvisorPassword", // Updated operation name
+      "operation": "verfityAndUpdateAdvisorPassword",
       "json": jsonEncode(jsonData),
     };
-
-    print(jsonData);
 
     try {
       var response = await http.post(url, body: requestBody);
@@ -729,7 +718,6 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
       if (mounted) {
         // Check if the widget is still mounted
         Get.snackbar(
@@ -743,12 +731,12 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
     }
   }
 
-  void enable2fa() async {
+  Future<void> enable2fa() async {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
 
       Map<String, dynamic> jsonData = {
-        "supM_id": widget.advisor_id,
+        "supM_id": supervisorId,
         "supM_authentication_status": 1,
       };
 
@@ -780,7 +768,6 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while enabling 2FA.",
@@ -791,12 +778,12 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
     }
   }
 
-  void disable2FA() async {
+  Future<void> disable2FA() async {
     try {
       var url = Uri.parse("${SessionStorage.url}transaction.php");
 
       Map<String, dynamic> jsonData = {
-        "supM_id": widget.advisor_id,
+        "supM_id": supervisorId,
         "supM_authentication_status": 0,
       };
 
@@ -828,7 +815,6 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
         }
       }
     } catch (e) {
-      print("Error: $e");
       Get.snackbar(
         "Error",
         "An error occurred while disabling 2FA.",
@@ -842,5 +828,406 @@ class _AdvisorEditProfileSheetState extends State<AdvisorEditProfileSheet> {
 // Logout Function
   void _logout() async {
     Navigator.pushReplacementNamed(context, '/home');
+  }
+
+  Future<void> sendOtpEmail(String email, String otp) async {
+    try {
+      final url = Uri.parse("${SessionStorage.url}transaction.php");
+      final jsonData = {
+        "emailToSent": email,
+        "emailSubject": "Verification Code",
+        "emailBody": "Your verification code is: <b>$otp</b>",
+      };
+      final body = { "operation": "sendEmail", "json": jsonEncode(jsonData) };
+      await http.post(url, body: body);
+    } catch (_) {}
+  }
+
+  void _showOtpDialogForPasswordChange(String currentPwd, String newPwd) {
+    final otpController = TextEditingController();
+    final emailController = TextEditingController(text: email);
+    String generatedOtp = '';
+    int resendCooldown = 0; // seconds
+    int codeExpires = 0; // seconds
+    Timer? tick;
+    bool stepVerify = false; // false: enter email, true: verify
+
+    void startTimers(void Function(void Function()) setState) {
+      resendCooldown = 30; // 30s before resend
+      codeExpires = 300; // 5 minutes
+      tick?.cancel();
+      tick = Timer.periodic(const Duration(seconds: 1), (_) {
+        setState(() {
+          if (resendCooldown > 0) resendCooldown--;
+          if (codeExpires > 0) codeExpires--;
+          if (codeExpires == 0 && stepVerify) {
+            // auto-expire
+          }
+        });
+      });
+    }
+
+    void sendCode(void Function(void Function()) setState) async {
+      generatedOtp = _generateOtp();
+      await sendOtpEmail(emailController.text.trim(), generatedOtp);
+      setState(() => stepVerify = true);
+      startTimers(setState);
+    }
+
+    showShadDialog(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(30.0),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return ShadDialog(
+              title: Text(stepVerify ? 'Verify Code' : 'Verify Email', style: const TextStyle(color: Colors.white)),
+              actions: [
+                if (!stepVerify) ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      tick?.cancel();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  // ShadButton(
+                  //   backgroundColor: const Color(0xFF104038),
+                  //   child: const Text('Send Code', style: TextStyle(color: Colors.white)),
+                  //   onPressed: () => sendCode(setState),
+                  // ),
+                ] else ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      tick?.cancel();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ShadButton(
+                    backgroundColor: const Color(0xFF1F2937),
+                    child: const Text('Verify', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      if (otpController.text.trim() == generatedOtp && codeExpires > 0) {
+                        Navigator.pop(context);
+                        tick?.cancel();
+                        _updatePassword(currentPwd, newPwd);
+                      } else {
+                        Get.snackbar('Error', codeExpires == 0 ? 'Code expired. Resend and try again.' : 'Incorrect code. Please try again.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      }
+                    },
+                  ),
+                ],
+              ],
+              child: Container(
+                width: 320,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                child: stepVerify
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header icon
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: const Icon(Icons.shield_outlined, color: Color(0xFF104038)),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Enter Verification Code',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF104038)),
+                          ),
+                          const SizedBox(height: 6),
+                          // Sent to email
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: const TextStyle(color: Colors.black87),
+                              children: [
+                                const TextSpan(text: "We've sent a 6-digit code to\n"),
+                                TextSpan(
+                                  text: emailController.text,
+                                  style: const TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Expiry timer
+                          Text(
+                            'Code expires in: ${Duration(seconds: codeExpires).toString().substring(2,7)}',
+                            style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 14),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('Verification Code', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Color(0xFF0F9D58), width: 2),
+                            ),
+                            child: ShadInput(
+                              controller: otpController,
+                              placeholder: const Text('Enter 6-digit code'),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Enter the 6-digit code sent to your email', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Didn't receive the code? ", style: TextStyle(color: Colors.black54, fontSize: 12)),
+                              if (resendCooldown > 0)
+                                Text('Resend in ${resendCooldown}s', style: const TextStyle(color: Colors.black45, fontSize: 12))
+                              else
+                                TextButton(
+                                  onPressed: () => sendCode(setState),
+                                  child: const Text('Resend', style: TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700)),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: () => setState(() => stepVerify = false),
+                              child: const Text('â† Back', style: TextStyle(color: Colors.black54)),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ShadInput(
+                            controller: emailController,
+                            placeholder: const Text('Email'),
+                            readOnly: true,
+                          ),
+                          const SizedBox(height: 12),
+                          ShadButton(
+                            backgroundColor: const Color(0xFF104038),
+                            child: const Text('Send Code', style: TextStyle(color: Colors.white)),
+                            onPressed: () => sendCode(setState),
+                          ),
+                        ],
+                      ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showOtpDialogForTwoFactor({required bool enable}) {
+    final otpController = TextEditingController();
+    final emailController = TextEditingController(text: email);
+    String generatedOtp = '';
+    int resendCooldown = 0;
+    int codeExpires = 0;
+    Timer? tick;
+    bool stepVerify = false;
+
+    void startTimers(void Function(void Function()) setState) {
+      resendCooldown = 30;
+      codeExpires = 300;
+      tick?.cancel();
+      tick = Timer.periodic(const Duration(seconds: 1), (_) {
+        setState(() {
+          if (resendCooldown > 0) resendCooldown--;
+          if (codeExpires > 0) codeExpires--;
+        });
+      });
+    }
+
+    void sendCode(void Function(void Function()) setState) async {
+      generatedOtp = _generateOtp();
+      await sendOtpEmail(emailController.text.trim(), generatedOtp);
+      setState(() => stepVerify = true);
+      startTimers(setState);
+    }
+
+    showShadDialog(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(30.0),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return ShadDialog(
+              title: Text(stepVerify ? 'Verify Code' : 'Verify Email', style: const TextStyle(color: Colors.white)),
+              actions: [
+                if (!stepVerify) ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      tick?.cancel();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  // ShadButton(
+                  //   backgroundColor: const Color(0xFF104038),
+                  //   child: const Text('Send Code', style: TextStyle(color: Colors.white)),
+                  //   onPressed: () => sendCode(setState),
+                  // ),
+                ] else ...[
+                  ShadButton(
+                    backgroundColor: const Color(0xFF104038),
+                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      tick?.cancel();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ShadButton(
+                    backgroundColor: const Color(0xFF1F2937),
+                    child: const Text('Verify', style: TextStyle(color: Colors.white)),
+                    onPressed: () async {
+                      if (otpController.text.trim() == generatedOtp && codeExpires > 0) {
+                        Navigator.pop(context);
+                        tick?.cancel();
+                        if (enable) {
+                          await enable2fa();
+                        } else {
+                          await disable2FA();
+                        }
+                      } else {
+                        Get.snackbar('Error', codeExpires == 0 ? 'Code expired. Resend and try again.' : 'Incorrect code. Please try again.', backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+                      }
+                    },
+                  ),
+                ],
+              ],
+              child: Container(
+                width: 320,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                child: stepVerify
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header icon
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: const Icon(Icons.shield_outlined, color: Color(0xFF104038)),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Enter Verification Code',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF104038)),
+                          ),
+                          const SizedBox(height: 6),
+                          // Sent to email
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: const TextStyle(color: Colors.black87),
+                              children: [
+                                const TextSpan(text: "We've sent a 6-digit code to\n"),
+                                TextSpan(
+                                  text: emailController.text,
+                                  style: const TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Expiry timer
+                          Text(
+                            'Code expires in: ${Duration(seconds: codeExpires).toString().substring(2,7)}',
+                            style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 14),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('Verification Code', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Color(0xFF0F9D58), width: 2),
+                            ),
+                            child: ShadInput(
+                              controller: otpController,
+                              placeholder: const Text('Enter 6-digit code'),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Enter the 6-digit code sent to your email', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Didn't receive the code? ", style: TextStyle(color: Colors.black54, fontSize: 12)),
+                              if (resendCooldown > 0)
+                                Text('Resend in ${resendCooldown}s', style: const TextStyle(color: Colors.black45, fontSize: 12))
+                              else
+                                TextButton(
+                                  onPressed: () => sendCode(setState),
+                                  child: const Text('Resend', style: TextStyle(color: Color(0xFF0F9D58), fontWeight: FontWeight.w700)),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: () => setState(() => stepVerify = false),
+                              child: const Text('â† Back', style: TextStyle(color: Colors.black54)),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ShadInput(
+                            controller: emailController,
+                            placeholder: const Text('Email'),
+                            readOnly: true,
+                          ),
+                          const SizedBox(height: 12),
+                          ShadButton(
+                            backgroundColor: const Color(0xFF104038),
+                            child: const Text('Send Code', style: TextStyle(color: Colors.white)),
+                            onPressed: () => sendCode(setState),
+                          ),
+                        ],
+                      ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  String _generateOtp() {
+    final r = Random();
+    return (r.nextInt(900000) + 100000).toString();
   }
 }

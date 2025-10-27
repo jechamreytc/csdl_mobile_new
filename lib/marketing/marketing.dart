@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:csdl_mobile/marketing/marketing_drawer.dart';
+import 'package:csdl_mobile/marketing/marketing_announcement.dart';
 import 'package:csdl_mobile/session_storage.dart';
 import 'approved_leads.dart';
 
@@ -79,7 +80,7 @@ class _MarketingDashboardState extends State<MarketingDashboard> {
         });
       }
     } catch (e) {
-      print("Error fetching referral counts: $e");
+      // print("Error fetching referral counts: $e");
     }
   }
 
@@ -95,47 +96,159 @@ class _MarketingDashboardState extends State<MarketingDashboard> {
       var res = jsonDecode(response.body);
       if (res["success"] == true && res["data"] != null) {
         List<dynamic> data = res["data"];
+        
+        // Filter based on status
         if (filter == "declined") {
           return data.where((r) => r['freshmen_ref_status'] == 2).toList();
+        } else if (filter == "pending") {
+          return data.where((r) => r['freshmen_ref_status'] == 0).toList();
+        } else if (filter == "accepted") {
+          return data.where((r) => r['freshmen_ref_status'] == 1).toList();
         }
         return data; // all for "all"
       }
     } catch (e) {
-      print("Error fetching referrals: $e");
+      // print("Error fetching referrals: $e");
     }
     return [];
   }
 
-  // Reusable Info Card
-  Widget _buildInfoCard(
-      String title, String value, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Card(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 3,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+  // Modern Info Card
+  Widget _buildModernInfoCard(
+      String title, String value, Color color, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.2), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Icon(icon, color: color, size: 20),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.bold),
+                const Spacer(),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: color.withOpacity(0.6),
+                  size: 16,
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: color.withOpacity(0.8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Supervisor Style Stat Card
+  Widget _buildStatCard(String label, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Legacy Info Card (kept for compatibility)
+  Widget _buildInfoCard(
+      String title, String value, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),
@@ -220,6 +333,7 @@ class _MarketingDashboardState extends State<MarketingDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: AppBar(
@@ -244,38 +358,47 @@ class _MarketingDashboardState extends State<MarketingDashboard> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              "Marketing Dashboard",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
             const SizedBox(height: 8),
 
-            // Profile Card
+            // âœ… Marketing Info Card (row layout like supervisor)
             Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 3,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Name: $_adminName",
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87),
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: const Color(0xFF104038),
+                      child: const Icon(Icons.person, size: 30, color: Colors.white),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Email: $_adminEmail",
-                      style:
-                          const TextStyle(fontSize: 14, color: Colors.black54),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _adminName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _adminEmail,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -284,47 +407,155 @@ class _MarketingDashboardState extends State<MarketingDashboard> {
 
             const SizedBox(height: 16),
 
-            // Referral Stats (3 clickable cards)
-            Row(
-              children: [
-                _buildInfoCard(
-                  "Total Referrals",
-                  _totalReferrals.toString(),
-                  Colors.blue,
-                  () {
-                    _openReferralList("all"); // Show all referrals
-                  },
+            // Announcements Section (matching supervisor style)
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF104038),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 8),
-                _buildInfoCard(
-                  "Accepted",
-                  _acceptedReferrals.toString(),
-                  Colors.green,
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ApprovedLeadsPage(
-                          adminEmail: widget.adminEmail, // Existing page
+                elevation: 4,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MarketingAnnouncementPage(
+                      adminEmail: widget.adminEmail,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                "View Announcements",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Referral Statistics Section (responsive design)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header - responsive layout
+                        if (constraints.maxWidth < 400)
+                          // Mobile: Stack icon and text vertically
+                          Column(
+                            children: [
+                              Icon(
+                                Icons.analytics,
+                                color: Colors.green[700],
+                                size: 24,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                "Referral Statistics",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          )
+                        else
+                          // Desktop: Side by side layout
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.analytics,
+                                color: Colors.green[700],
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text(
+                                  "Referral Statistics",
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 16),
+
+                        // Statistics Cards - Supervisor Style Layout
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildStatCard(
+                                    "Total Referrals",
+                                    _totalReferrals.toString(),
+                                    Icons.people,
+                                    Colors.blue,
+                                    onTap: () => _openReferralList("all"),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    "Accepted",
+                                    _acceptedReferrals.toString(),
+                                    Icons.check_circle,
+                                    Colors.green,
+                                    onTap: () => _openReferralList("accepted"),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildStatCard(
+                                    "Declined",
+                                    _declinedReferrals.toString(),
+                                    Icons.cancel,
+                                    Colors.red,
+                                    onTap: () => _openReferralList("declined"),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    "Pending",
+                                    (_totalReferrals - _acceptedReferrals - _declinedReferrals).toString(),
+                                    Icons.schedule,
+                                    Colors.orange,
+                                    onTap: () => _openReferralList("pending"),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 8),
-                _buildInfoCard(
-                  "Declined",
-                  _declinedReferrals.toString(),
-                  Colors.red,
-                  () {
-                    _openReferralList("declined"); // Only declined
-                  },
-                ),
-              ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
       ),
     );
   }
+
 }

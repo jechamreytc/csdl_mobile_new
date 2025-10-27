@@ -1,4 +1,4 @@
-//AdvisorQrScannerAdjustment
+﻿//AdvisorQrScannerAdjustment
 
 import 'dart:convert';
 import 'package:csdl_mobile/session_storage.dart';
@@ -267,9 +267,9 @@ class _AdvisorQrScannerAdjustmentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("• The student is assigned to your supervision"),
-                    Text("• The QR code is valid and not damaged"),
-                    Text("• The student is scheduled for today's duty"),
+                    Text("â€¢ The student is assigned to your supervision"),
+                    Text("â€¢ The QR code is valid and not damaged"),
+                    Text("â€¢ The student is scheduled for today's duty"),
                   ],
                 ),
               ),

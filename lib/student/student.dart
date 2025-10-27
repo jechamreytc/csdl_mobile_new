@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 // import 'package:csdl_mobile/components/alert_dialog_dtr.dart';
 // import 'package:csdl_mobile/components/app_bar.dart';
 // import 'package:csdl_mobile/components/drawer_main.dart';
@@ -237,97 +237,119 @@ class _StudentState extends State<Student> {
                                                           BorderRadius.circular(
                                                               12),
                                                     ),
-                                                    child:
-                                                        SingleChildScrollView(
-                                                      scrollDirection:
-                                                          Axis.horizontal,
-                                                      child: DataTable(
-                                                        columns: const [
-                                                          DataColumn(
-                                                            label: Text("Date",
-                                                                style: TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold)),
-                                                          ),
-                                                          DataColumn(
-                                                            label: Text(
-                                                                "Actions",
-                                                                style: TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold)),
-                                                          ),
-                                                        ],
-                                                        rows:
-                                                            dtrData.map((data) {
-                                                          return DataRow(
-                                                            cells: [
-                                                              DataCell(Text(
-                                                                  data['record_date'] ??
-                                                                      'N/A')),
-                                                              DataCell(
-                                                                IconButton(
-                                                                  icon: Icon(
-                                                                      Icons
-                                                                          .visibility,
-                                                                      color: Colors
-                                                                          .green
-                                                                          .shade700),
-                                                                  onPressed:
-                                                                      () {
-                                                                    showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (_) =>
-                                                                              AlertDialog(
-                                                                        shape:
-                                                                            RoundedRectangleBorder(
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(15),
-                                                                        ),
-                                                                        title:
-                                                                            Text(
-                                                                          "Details for ${data['record_date']}",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                Colors.green.shade800,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
+                                                    constraints: BoxConstraints(
+                                                      maxHeight: MediaQuery.of(context).size.height * 0.4, // Limit height to 40% of screen
+                                                    ),
+                                                    child: SingleChildScrollView(
+                                                      scrollDirection: Axis.vertical, // Enable vertical scrolling
+                                                      child: Center(
+                                                        child: DataTable(
+                                                          columnSpacing: 40, // Space between Date and Actions columns
+                                                          horizontalMargin: 8, // Minimal horizontal margin
+                                                          columns: const [
+                                                            DataColumn(
+                                                              label: Text("Date",
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold)),
+                                                            ),
+                                                            DataColumn(
+                                                              label: Text(
+                                                                  "Actions",
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold)),
+                                                            ),
+                                                          ],
+                                                          rows: dtrData.map((data) {
+                                                            return DataRow(
+                                                              cells: [
+                                                                DataCell(Text(
+                                                                    data['record_date'] ??
+                                                                        'N/A')),
+                                                                DataCell(
+                                                                  IconButton(
+                                                                    icon: Icon(
+                                                                        Icons
+                                                                            .visibility,
+                                                                        color: Colors
+                                                                            .green
+                                                                            .shade700),
+                                                                    onPressed: () {
+                                                                      showDialog(
+                                                                        context: context,
+                                                                        builder: (_) => AlertDialog(
+                                                                          shape: RoundedRectangleBorder(
+                                                                            borderRadius: BorderRadius.circular(15),
                                                                           ),
-                                                                        ),
-                                                                        content:
-                                                                            Column(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.min,
-                                                                          crossAxisAlignment:
-                                                                              CrossAxisAlignment.start,
-                                                                          children: [
-                                                                            Text("Time In: ${data['dtr_time_in'] ?? 'N/A'}"),
-                                                                            const SizedBox(height: 8),
-                                                                            Text("Time Out: ${data['dtr_time_out'] ?? 'N/A'}"),
-                                                                            const SizedBox(height: 8),
-                                                                            Text("Rendered Hours: ${data['TotalRendered'] ?? 'N/A'}"),
+                                                                          title: Text(
+                                                                            "Details for ${data['record_date']}",
+                                                                            style: TextStyle(
+                                                                              color: Colors.green.shade800,
+                                                                              fontWeight: FontWeight.bold,
+                                                                            ),
+                                                                          ),
+                                                                          content: Column(
+                                                                            mainAxisSize: MainAxisSize.min,
+                                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                                            children: [
+                                                                              // Show source indicator
+                                                                              if (data['source'] == 'ADJUSTMENT') ...[
+                                                                                Container(
+                                                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Colors.orange.shade100,
+                                                                                    borderRadius: BorderRadius.circular(4),
+                                                                                    border: Border.all(color: Colors.orange.shade300),
+                                                                                  ),
+                                                                                  child: Row(
+                                                                                    mainAxisSize: MainAxisSize.min,
+                                                                                    children: [
+                                                                                      Icon(Icons.schedule, size: 16, color: Colors.orange.shade700),
+                                                                                      const SizedBox(width: 4),
+                                                                                      Text(
+                                                                                        "ADJUSTMENT",
+                                                                                        style: TextStyle(
+                                                                                          color: Colors.orange.shade700,
+                                                                                          fontWeight: FontWeight.bold,
+                                                                                          fontSize: 12,
+                                                                                        ),
+                                                                                      ),
+                                                                                    ],
+                                                                                  ),
+                                                                                ),
+                                                                                const SizedBox(height: 8),
+                                                                                Text("Adjusted Hours: ${data['adjustment_deducted'] ?? 'N/A'} hours"),
+                                                                                const SizedBox(height: 4),
+                                                                                Text("Reason: ${data['adjustment_reason'] ?? 'N/A'}"),
+                                                                                const SizedBox(height: 8),
+                                                                                Text("Time Recorded: ${data['dtr_time_in'] ?? 'N/A'}"),
+                                                                              ] else ...[
+                                                                                Text("Time In: ${data['dtr_time_in'] ?? 'N/A'}"),
+                                                                                const SizedBox(height: 8),
+                                                                                Text("Time Out: ${data['dtr_time_out'] ?? 'N/A'}"),
+                                                                                const SizedBox(height: 8),
+                                                                                Text("Rendered Hours: ${data['TotalRendered'] ?? 'N/A'}"),
+                                                                              ],
+                                                                            ],
+                                                                          ),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              onPressed: () => Navigator.pop(context),
+                                                                              child: Text("Close", style: TextStyle(color: Colors.green.shade800)),
+                                                                            ),
                                                                           ],
                                                                         ),
-                                                                        actions: [
-                                                                          TextButton(
-                                                                            onPressed: () =>
-                                                                                Navigator.pop(context),
-                                                                            child:
-                                                                                Text("Close", style: TextStyle(color: Colors.green.shade800)),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    );
-                                                                  },
+                                                                      );
+                                                                    },
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                            ],
-                                                          );
-                                                        }).toList(),
+                                                              ],
+                                                            );
+                                                          }).toList(),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -392,7 +414,7 @@ class _StudentState extends State<Student> {
                               ),
                               const SizedBox(height: 8),
                               const Text(
-                                "● Be on time and follow your assigned schedule\n● Wear your uniform and your student ID.\n● Be respectful and courteous at all times.\n● Complete tasks properly and ask if unsure.\n● Inform your supervisor if you can’t report.\n● Follow office rules and Guidelines.",
+                                "â— Be on time and follow your assigned schedule\nâ— Wear your uniform and your student ID.\nâ— Be respectful and courteous at all times.\nâ— Complete tasks properly and ask if unsure.\nâ— Inform your supervisor if you canâ€™t report.\nâ— Follow office rules and Guidelines.",
                                 style: TextStyle(
                                   fontSize: 12,
                                   height: 1.5,
@@ -468,9 +490,39 @@ class _StudentState extends State<Student> {
           return DataRow(cells: [
             DataCell(Text(data['record_date'] ?? 'N/A')),
             DataCell(
-              ElevatedButton(
-                onPressed: () => onDetailTap(data),
-                child: const Text("View Details"),
+              Row(
+                children: [
+                  // Show source indicator
+                  if (data['source'] == 'ADJUSTMENT') ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: Colors.orange.shade300),
+                      ),
+                      child: Text(
+                        "ADJUSTMENT",
+                        style: TextStyle(
+                          color: Colors.orange.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  ElevatedButton(
+                    onPressed: () => onDetailTap(data),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: data['source'] == 'ADJUSTMENT' 
+                          ? Colors.orange.shade800 
+                          : Colors.green.shade800,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(data['source'] == 'ADJUSTMENT' ? "View Adjustment" : "View Details"),
+                  ),
+                ],
               ),
             ),
           ]);
@@ -519,7 +571,6 @@ class _StudentState extends State<Student> {
         return res;
       }
     } catch (e) {
-      print("Error fetching DTR: $e");
     }
     return [];
   }
@@ -609,7 +660,6 @@ class _StudentState extends State<Student> {
         });
       }
     } catch (e) {
-      print(e);
     }
   }
 }

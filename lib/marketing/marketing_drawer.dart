@@ -1,4 +1,4 @@
-import 'package:csdl_mobile/marketing/hk_leads.dart';
+﻿import 'package:csdl_mobile/marketing/hk_leads.dart';
 import 'package:csdl_mobile/marketing/marketing.dart';
 import 'package:csdl_mobile/marketing/marketing_edit_profile.dart';
 import 'package:csdl_mobile/marketing/marketing_settings.dart';
@@ -76,7 +76,7 @@ class _MarketingDrawerState extends State<MarketingDrawer> {
                   left: 0,
                   top: 120,
                   child: Text(
-                    "DASHBOARD",
+                    "",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

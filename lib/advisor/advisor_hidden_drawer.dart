@@ -1,4 +1,4 @@
-// import 'dart:convert';
+﻿// import 'dart:convert';
 // import 'package:csdl_mobile/advisor/advisor.dart';
 // import 'package:csdl_mobile/advisor/advisor_evalution.dart';
 // import 'package:csdl_mobile/advisor/advisor_qr_scanner.dart';
@@ -95,7 +95,7 @@
 //     //       selectedStyle: const TextStyle(
 //     //         color: Colors.black,
 //     //       ),
-//     //       name: "⏰ Dashboard",
+//     //       name: "â° Dashboard",
 //     //       baseStyle: const TextStyle(
 //     //         color: Colors.black,
 //     //         fontSize: 12.0,
@@ -114,7 +114,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "📋 Scholar List",
+//           name: "ðŸ“‹ Scholar List",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,
@@ -133,7 +133,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "⏰ Adjustments",
+//           name: "â° Adjustments",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,
@@ -152,7 +152,7 @@
 //     //         selectedStyle: const TextStyle(
 //     //           color: Colors.black,
 //     //         ),
-//     //         name: "📝 Request Schedule",
+//     //         name: "ðŸ“ Request Schedule",
 //     //         baseStyle: const TextStyle(
 //     //           color: Colors.black,
 //     //           fontSize: 12.0,
@@ -171,7 +171,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "⚙️ QR Code Scanner",
+//           name: "âš™ï¸ QR Code Scanner",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,
@@ -188,7 +188,7 @@
 //           selectedStyle: const TextStyle(
 //             color: Colors.black,
 //           ),
-//           name: "⚙️ Account Settings",
+//           name: "âš™ï¸ Account Settings",
 //           baseStyle: const TextStyle(
 //             color: Colors.black,
 //             fontSize: 12.0,

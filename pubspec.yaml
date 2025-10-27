@@ -38,6 +38,7 @@ dependencies:
   http: ^1.2.2
   mobile_scanner: ^7.0.1
   qr_bar_code: ^2.0.0
+  crypto: ^3.0.6
   image_picker: ^1.1.2
   shared_preferences: ^2.5.1
   firebase_auth: ^5.4.2

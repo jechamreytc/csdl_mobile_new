@@ -1,4 +1,4 @@
-import 'package:csdl_mobile/fresh_student/fresh_student.dart';
+﻿import 'package:csdl_mobile/fresh_student/fresh_student.dart';
 import 'package:csdl_mobile/fresh_student/fresh_student_profile_sheet.dart';
 import 'package:csdl_mobile/fresh_student/fresh_student_referral_list.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +78,7 @@ class _FreshStudentDrawerState extends State<FreshStudentDrawer> {
                   left: 0,
                   top: 120,
                   child: Text(
-                    "DASHBOARD",
+                    "",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

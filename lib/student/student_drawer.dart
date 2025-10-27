@@ -1,4 +1,4 @@
-import 'package:csdl_mobile/session_storage.dart';
+﻿import 'package:csdl_mobile/session_storage.dart';
 import 'package:csdl_mobile/student/edit_profile_sheet.dart';
 import 'package:csdl_mobile/student/student.dart';
 import 'package:csdl_mobile/student/student_dashboard.dart';
@@ -78,7 +78,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
                   left: 0,
                   top: 120,
                   child: Text(
-                    "DRAWER",
+                    "",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -235,7 +235,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
             iconColor: Colors.red,
             label: "Logout",
             onTap: () {
-              SessionStorage.clear(); // ❌ Clear all session
+              SessionStorage.clear(); // âŒ Clear all session
 
               Navigator.pushReplacementNamed(context, '/'); // Back to login
             },

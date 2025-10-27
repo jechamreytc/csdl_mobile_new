@@ -92,12 +92,10 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
     // Check if QR code is within the scanning frame (250x250px centered)
     if (!_isWithinScanningArea(scannedBarcode)) {
       // QR code is outside the scanning area - ignore it completely
-      print("QR code detected outside frame - ignoring");
       return;
     }
 
     // QR code is inside the scanning area - process it
-    print("QR code detected inside frame - processing");
     
     final now = DateTime.now();
 
@@ -160,14 +158,13 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
                     centerY <= scanAreaBottom;
 
     // Debug information
-    print("Screen Size: ${screenWidth}x${screenHeight}");
-    print("QR Code Center: ($centerX, $centerY)");
-    print("Frame Boundaries: Left=$scanAreaLeft, Top=$scanAreaTop, Right=$scanAreaRight, Bottom=$scanAreaBottom");
-    print("QR Code inside frame: $isWithin");
+    
+    
+    
     
     // Additional debug info
-    print("QR Code X within frame: ${centerX >= scanAreaLeft && centerX <= scanAreaRight}");
-    print("QR Code Y within frame: ${centerY >= scanAreaTop && centerY <= scanAreaBottom}");
+    
+    
 
     return isWithin;
   }
@@ -256,16 +253,16 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
                             size: 24,
                           ),
                           SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Position the QR code within the frame to scan',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
+                          // Expanded(
+                          //   child: Text(
+                          //     'Position the QR code within the frame to scan',
+                          //     style: TextStyle(
+                          //       color: Colors.white,
+                          //       fontSize: 14,
+                          //       fontWeight: FontWeight.w500,
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -476,7 +473,6 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
             responseBody.contains('Notice') ||
             responseBody.contains('Parse error') ||
             responseBody.contains('Call to undefined')) {
-          print("Server returned HTML instead of JSON: $responseBody");
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Server error: Please try again later"),
@@ -492,8 +488,6 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
         try {
           res = jsonDecode(responseBody);
         } catch (jsonError) {
-          print("JSON Parse Error: $jsonError");
-          print("Response body: $responseBody");
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Server error: Invalid response format"),
@@ -529,27 +523,9 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
             );
           }
         } else if (res is Map && res["success"] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Attendance marked successfully!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) Navigator.pop(context);
-          });
+          _showSuccessDialog();
         } else if (res == 1 || (res is List && res.contains(1))) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Attendance marked successfully!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) Navigator.pop(context);
-          });
+          _showSuccessDialog();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -567,7 +543,6 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
         );
       }
     } catch (e) {
-      print("ERROR: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text("An error occurred while marking attendance.")),
@@ -647,9 +622,9 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("• The student is assigned to your supervision"),
-                    Text("• The QR code is valid and not damaged"),
-                    Text("• The student is scheduled for today's duty"),
+                    Text("â€¢ The student is assigned to your supervision"),
+                    Text("â€¢ The QR code is valid and not damaged"),
+                    Text("â€¢ The student is scheduled for today's duty"),
                   ],
                 ),
               ),
@@ -892,20 +867,42 @@ class _AdvisorQrScannerState extends State<AdvisorQrScanner> {
     );
   }
 
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Success"),
+          content: const Text("Attendance marked successfully!"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.pop(context); // Go back to previous page
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String _getInstructionText(String errorType) {
     switch (errorType) {
       case "sf_duty_too_early":
-        return "• You can only scan attendance during your assigned duty time\n• Please wait until your duty starts to scan time-in";
+        return "â€¢ You can only scan attendance during your assigned duty time\nâ€¢ Please wait until your duty starts to scan time-in";
       case "sf_duty_late_timein":
-        return "• You missed the 15-minute grace period for time-in\n• Please contact your supervisor for assistance";
+        return "â€¢ You missed the 15-minute grace period for time-in\nâ€¢ Please contact your supervisor for assistance";
       case "sf_duty_too_early_timeout":
-        return "• You can only scan time-out after your duty ends\n• Please wait until your duty time is complete";
+        return "â€¢ You can only scan time-out after your duty ends\nâ€¢ Please wait until your duty time is complete";
       case "sf_duty_late_timeout":
-        return "• You missed the 15-minute grace period for time-out\n• Please contact your supervisor for assistance";
+        return "â€¢ You missed the 15-minute grace period for time-out\nâ€¢ Please contact your supervisor for assistance";
       case "sf_duty_expired":
-        return "• Your duty time has ended and the grace period has expired\n• Please contact your supervisor for assistance";
+        return "â€¢ Your duty time has ended and the grace period has expired\nâ€¢ Please contact your supervisor for assistance";
       default:
-        return "• Please follow your assigned duty schedule\n• Contact your supervisor if you have questions";
+        return "â€¢ Please follow your assigned duty schedule\nâ€¢ Contact your supervisor if you have questions";
     }
   }
 
